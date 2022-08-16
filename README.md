@@ -1,7 +1,7 @@
 # PageTableNext
 
 ## What it does
-The module provides a list of PageTable based content elements. In enables the backend user to easily create, publish, move, delete,
+The module provides a list of PageTable based content elements. It enables the backend user to easily create, publish, move, delete,
 copy and paste content elements.
 
 The rendering logic of the module is detached from the ProcessWire backend scope via Shadow DOM and allows the elements rendering identical to the front end. It ships with some helper functions that simplify the handling
@@ -60,7 +60,7 @@ echo $page->render->ptn;
 ```
 
 ### Backend
-All elements are rendered in the backend as custom HTML elements (<ptn-content>). The styling is separated from the backend.
+All elements are rendered in the backend as custom HTML elements (&lt;ptn-content&gt;). The styling is separated from the backend.
 This way, the rendering of your content elements is encapsulated and separated from the backend.
 You can use a different custom element
 [by extending the class "PtnContent"](#override_custom_element).
@@ -92,13 +92,16 @@ the content elements will be created as child pages of the referenced page.
 The field itself returns a PageArray of content elements. If you want you can create your own rendering:
 
 ```php
-
 /** @var PageArray $contentElements */
 $contentElements = $page->ptn;
+$renderIndex = 0;
 
 /** @var Page $contentElement */
 foreach($contentElements as $contentElement) {
-    echo $contentElement->title;
+    echo $page->renderValue(
+        $contentElement->set('_myRenderIndex', $renderIndex++),
+        'ptn/' . $contentElement->template->name
+    );
 }
 ```
 
