@@ -86,7 +86,7 @@ when you want to create new content elements on your page.
 If selected, all new content elements are stored as a child page of the selected page. If no page is selected,
 the content elements will be created as child pages of the referenced page.
 
-![Fieldsettings](https://kunden.neuerituale.net/field_1.png)
+![Fieldsettings](https://user-images.githubusercontent.com/11630948/184857397-60cd86c1-1af9-4207-aa0e-18b0ffcc85eb.png)
 
 ## API
 The field itself returns a PageArray of content elements. If you want you can create your own rendering:
