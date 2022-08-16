@@ -1,0 +1,578 @@
+<?php
+
+/**
+ * COPYRIGHT NOTICE
+ * Copyright (c) 2022 Neue Rituale GbR
+ * @author NR <code@neuerituale.com>
+ * @license MIT
+ */
+
+namespace ProcessWire;
+
+use PDO;
+
+/**
+ * @method string getContentElementTitle(Page $page, $formatted = false)
+ * @method WireArray findPageTableNextFields()
+ * @method WireArray findAdditionalReferenceFields()
+ * @method false|int|string getDbColumn(Field $field, Page $page)
+ * @method void setupFieldAndTemplate(string $newFieldName = 'ptn')
+ */
+
+class PageTableNext extends WireData implements Module {
+
+	public $isPageTableNextContentElementCache = [];
+
+	public static function getModuleInfo() {
+		return array(
+			'title' => __('PageTable Next'),
+			'summary' => __('PageTable with scoped admin preview'),
+			'version' => 1,
+			'requires' => ['InputfieldPageTableNext', 'FieldtypePageTableNext', 'FieldtypePageTable'],
+			'installs' => ['InputfieldPageTableNext', 'FieldtypePageTableNext', 'FieldtypePageTable', 'ProcessPageClone'],
+			'autoload' => true,
+			'singular' => true
+		);
+	}
+
+	public function init() {
+		// Add page reference to other fields like PageTable(Next) or Profields: Table
+		$this->addHookAfter('Page::references', $this, 'hookReferences');
+		$this->addHookAfter('Page::numReferences', $this, 'hookReferences');
+
+		// Optimize PageEditForm (headline, browsertitle and breadcrumbs)
+		$this->addHookBefore('ProcessPageEdit::execute', $this, 'hookContentElementEditForm');
+
+		// Manipulate localHttpUrl for content element templates
+		$this->addHook('Page::path', $this, 'hookContentElementPath', ['priority' => 150]);
+		$this->addHook('Page::localHttpUrl', $this, 'hookContentElementPath', ['priority' => 150]);
+
+		// Allow view for content element templates
+		$this->addHook('Page::viewable', $this, 'hookContentElementViewStatus');
+
+		// Invalidate content element parent page cache
+		$this->addHookAfter('Pages::saved', $this, 'hookInvalidateReferencedPagesCache');
+
+		//
+		$this->addHookBefore('InputfieldPageTableAjax::checkAjax', $this, 'hookInputfieldPageTableAjaxCheckAjax');
+	}
+
+	/**
+	 * Check if page is a content element page
+	 * @param Page $page
+	 * @return bool|mixed
+	 */
+	private function isPageTableNextContentElement(Page $page) {
+
+		// skip double check
+		if(array_key_exists($page->id, $this->isPageTableNextContentElementCache)) return $this->isPageTableNextContentElementCache[$page->id];
+
+		$pageTableNextFields = $this->findPageTableNextFields();
+		foreach($pageTableNextFields as $pageTableNextField) {
+			if($page->parents('id=' . $pageTableNextField->parent_id)->count) {
+				$this->isPageTableNextContentElementCache[$page->id] = true;
+				return true;
+			}
+		}
+
+		$this->isPageTableNextContentElementCache[$page->id] = false;
+		return false;
+	}
+
+	/**
+	 * Find all PageTableNext fields
+	 * @return WireArray
+	 */
+	public function ___findPageTableNextFields() {
+		return $this->fields->find('type=FieldtypePageTableNext');
+	}
+
+	/**
+	 * Find compatible field for reference Pages
+	 * @return WireArray
+	 */
+	public function ___findAdditionalReferenceFields() {
+		return $this->fields->find('type=FieldtypePageTableNext|FieldtypePageTableExtended|FieldtypePageTable|FieldtypeTable');
+	}
+
+	/**
+	 * Build ContentElementTitle for overview, window and browser title
+	 * @param Page $page
+	 * @param bool $formatted
+	 * @return string
+	 */
+	public function ___getContentElementTitle(Page $page, bool $formatted = false) {
+
+		$category = $page->template->get('label|name');
+		$title = $page->title;
+
+		$out = !empty($title)
+			? "<b>$category:</b> <i>$title</i>"
+			: "<b>$category</b>"
+		;
+
+		return $formatted ? $out : strip_tags($out);
+	}
+
+	/**
+	 * Optimize headline, browsertitle and breadcrumb to sections
+	 * @param HookEvent $event
+	 * @return void
+	 * @throws WireException
+	 */
+	public function hookContentElementEditForm(HookEvent $event) {
+
+		/** @var ProcessPageEdit $processPageEdit */
+		$processPageEdit = $event->object;
+		$page = $processPageEdit->getPage();
+
+		if($this->isPageTableNextContentElement($page)) {
+
+			// headline
+			$headline = $this->getContentElementTitle($page);
+			$processPageEdit->headline($headline);
+
+			// BrowserTitle
+			$processPageEdit->browserTitle($headline);
+
+			// breadcrumb
+			/** @var Breadcrumbs $breadcrumbs */
+			$breadcrumbs = wire('breadcrumbs');
+			$reference = $page->references('include=all')->first();
+
+			if($reference && $reference->id) {
+				// clear and set new
+				$breadcrumbs->removeAll();
+
+				// add parents
+				foreach($reference->parents as $b) $breadcrumbs->add( new Breadcrumb('../?open=' . $b->id, $b->getText('title|name')) );
+
+				// add section reference
+				$breadcrumbs->add( new Breadcrumb($reference->editUrl, $reference->getText('title|name')) );
+			}
+
+		}
+	}
+
+	/**
+	 * Find embed page for all "section-" templates
+	 * and manipulate localhttpurl
+	 * @see https://koerber.locale/#s3646
+	 *
+	 * @param HookEvent $event
+	 * @return void
+	 */
+	public function hookContentElementPath(HookEvent $event) {
+		/** @var Page $page */
+		$page = $event->object;
+
+		if(!$this->isPageTableNextContentElement($page)) return;
+		$reference = $page->references('include=unpublished')->first();
+
+		// TODO make the url configurable
+		if($reference && $reference->id) $event->return = $reference->path . '#s' . $page->id;
+	}
+
+	/**
+	 * Allow "view" for "section-" templates without template-file
+	 * The url goes to the embed page
+	 * @see Hooks::hookManipulateUrlForSections
+	 *
+	 * @param HookEvent $event
+	 * @return void
+	 */
+	public function hookContentElementViewStatus(HookEvent $event) {
+		/** @var Page $page */
+		$page = $event->object;
+		if(!$this->isPageTableNextContentElement($page)) return;
+		$event->return = $page->hasStatus(Page::statusTemp) || $page->numReferences('include=unpublished') > 0;
+	}
+
+	/**
+	 * Persist sorting on update
+	 * Same as @see InputfieldPageTableAjax::___checkAjax()
+	 * Add $page->save($field->name); to update sorting
+	 *
+	 * @param HookEvent $event
+	 * @return void
+	 * @throws WireException
+	 * @throws WirePermissionException
+	 */
+	protected function hookInputfieldPageTableAjaxCheckAjax(HookEvent $event) {
+
+		/** @var InputfieldPageTableAjax $inputfieldPageTableAjax */
+		$inputfieldPageTableAjax = $event->object;
+		$event->replace = true;
+
+		$input = $this->wire('input');
+		$fieldName = $input->get('InputfieldPageTableField');
+		if(!$fieldName) return;
+
+		$processPage = $this->wire('page');
+		if(!in_array('WirePageEditor', wireClassImplements((string) $processPage->process))) return; // not ProcessPageEdit or compatible
+
+		$field = $this->wire('fields')->get($this->wire('sanitizer')->fieldName($fieldName));
+		if(!$field || !$field->type instanceof FieldtypePageTable) return; // die('field does not exist or is not FieldtypePageTable');
+
+		$pageID = (int) $input->get('id');
+		if(!$pageID) return; // die('page ID not specified');
+
+		$page = $this->wire('pages')->get($pageID);
+		if(!$page->id) return;
+		if(!$page->editable($field->name)) return;
+
+		$page->of(false);
+		$page->get($field->name); // preload, fixes issue #518 with formatted version getting loaded when it shouldn't
+
+		// check for new item that should be added
+		$itemID = (int) $input->get('InputfieldPageTableAdd');
+		if($itemID) $inputfieldPageTableAjax->addItem($page, $field, $this->wire('pages')->get($itemID));
+
+		$sort = $input->get('InputfieldPageTableSort');
+		if(strlen("$sort")) {
+			$inputfieldPageTableAjax->sortItems($page, $field, $sort);
+			$page->save($field->name);
+		}
+
+		$inputfieldPageTableAjax->renderAjax($page, $field);
+	}
+
+	/**
+	 * Invalidate cache from content element referenced pages
+	 * @param HookEvent $event
+	 * @return void
+	 * @throws WireException
+	 */
+	public function hookInvalidateReferencedPagesCache(HookEvent $event) {
+
+		/** @var Page $page */
+		$page = $event->arguments(0);
+		if(!$this->isPageTableNextContentElement($page)) return;
+
+		/** @var array $referenceFields */
+		$referenceFields = $page->references('include=all,check_access=0',true);
+
+		/**
+		 * @see Page::___references()
+		 * @var string $fieldName
+		 * @var PageArray $references
+		 */
+		foreach($referenceFields as $fieldName => $references) {
+
+			/** @var Page $reference */
+			foreach($references as $reference) {
+				$reference->of(false);
+				$reference->save($fieldName);
+			}
+		}
+
+	}
+
+	/**
+	 * Handle the call #reference
+	 * @param HookEvent $event
+	 */
+	public function hookReferences(HookEvent $event) {
+
+		/** @var Page $page */
+		$page = $event->object;
+		if(!($page instanceof Page)) return;
+
+		$additionalReferences = $this->findReferences(
+			$page,
+			$event->arguments(0),
+			$event->arguments(1),
+			$event->method === 'numReferences'
+		);
+
+		// Add References
+		if($event->return instanceof PageArray) {
+			if($additionalReferences instanceof PageArray) $event->return->add($additionalReferences);
+		} else {
+			$event->return = $additionalReferences;
+		}
+	}
+
+	/**
+	 * #reference
+	 * Return pages referencing the given $page, optionally indexed by field name
+	 *
+	 * The default behavior when no arguments are provided (except $page) is to simply return a PageArray of all pages
+	 * referencing the given one (excluding hidden, unpublished, trash, no-access, etc.). Specify "include=all"
+	 * as your $selector if you want to include all pages without filtering. If the quantity may be large,
+	 * you should also include a "limit=100" (replacing 100 with your limit). This method supports pagination
+	 * when specifying a limit.
+	 *
+	 * @param Page $page Page to get references for
+	 * @param string|bool $selector Optionally filter/modify returned result, i.e. "limit=10, include=all", etc.
+	 *  Or boolean TRUE as shortcut for "include=all".
+	 * @param bool|Field|null $field Optionally specify Field to limit results to (default includes all fields of this type),
+	 * 	Or boolean TRUE to return array indexed by field name.
+	 * @param bool $getCount Specify true to get a count (int) rather than a PageArray (default=false)
+	 * @return PageArray|array|int Returns one of the following, according to the provided arguments:
+	 * 	- returns PageArray as default behavior, including when given a $selector string and/or Field object.
+	 * 	- returns array of PageArray objects if $field argument is TRUE ($selector may be populated string or blank string).
+	 *  - returns int if the count option (boolean true) specified for $selector.
+	 *
+	 */
+	public function findReferences(Page $page, $selector = '', $field = false, bool $getCount = false) {
+
+		/** @var Pages $pages */
+		$pages = $this->wire('pages');
+
+		// modifier option defaults
+		$byField = false;
+		$includeAll = $selector === true || $selector === "include=all";
+		$findLimit = 200;
+		$fieldName = '';
+
+		// determine whether to use include=all
+		if($selector === true) {
+			$selector = "include=all";
+		} else if(strlen($selector) && !$includeAll && strpos($selector, "include=all") !== false) {
+			foreach(new Selectors($selector) as $s) {
+				if($s->field() === 'include' && $s->value() === 'all') {
+					$includeAll = true;
+					break;
+				}
+			}
+		}
+
+		if(is_bool($field) || is_null($field)) {
+			$byField = $field ? true : false;
+		} else if(is_string($field)) {
+			$fieldName = $this->wire('sanitizer')->fieldName($field);
+		} else if(is_int($field)) {
+			$field = $this->wire('fields')->get($field);
+			if($field) $fieldName = $field->name;
+		} else if($field instanceof Field) {
+			$fieldName = $field->name;
+		}
+
+		// results
+		$fieldNames = array(); // field names that point to $page, array of [ field_id => field_name ]
+		$fieldCounts = array(); // counts indexed by field name (if count mode)
+		$total = 0;
+
+		// first determine which fields have references to $page
+		foreach($this->findAdditionalReferenceFields() as $field) {
+
+			if($fieldName && $field->name != $fieldName) continue;
+
+			// get the db column
+			if(!$column = $this->getDbColumn($field, $page)) continue;
+
+			$table = $field->getTable();
+			$sql = "SELECT COUNT(*) FROM `$table` WHERE `$column`=:id";
+			$query = $this->wire('database')->prepare($sql);
+			$query->bindValue(':id', $page->id, PDO::PARAM_INT);
+
+			$query->execute();
+			$cnt = (int) $query->fetchColumn();
+
+			if($cnt > 0 || true) {
+				$fieldNames[$field->id] = $field->name;
+				if($column !== 'data') $fieldNames[$field->id] .= '.' . $column;
+				$fieldCounts[$field->name] = $cnt;
+				$total += $cnt;
+			}
+
+			$query->closeCursor();
+		}
+
+		// if they just asked for the count, then we have all that we need to finish now
+		if($getCount && $includeAll) {
+			// return count or array of counts
+			return $byField ? $fieldCounts : $total;
+		}
+
+		// if there was nothing found, finish early
+		if(!$total) {
+			// no references found
+			if($getCount) return $total;
+			return $byField ? array() : $pages->newPageArray();
+		}
+
+		// perform another find() to filter results, and return requested result type
+		if($byField) {
+			// return array of PageArrays indexed by fieldName
+			$result = array();
+			foreach($fieldNames as $fieldName) {
+				$s = rtrim("$fieldName=$page->id, $selector", ', ');
+				if($getCount) {
+					$cnt = $pages->count($s);
+					if($cnt) $result[$fieldName] = $cnt;
+				} else {
+					if($total > $findLimit) {
+						$items = $pages->findMany($s);
+					} else {
+						$items = $pages->find($s);
+					}
+					if($items->count()) $result[$fieldName] = $items;
+				}
+			}
+		} else {
+			// return PageArray of all references
+			$selector = rtrim(implode('|', $fieldNames) . "=$page->id, $selector", ', ');
+			if($getCount) {
+				$result = $pages->count($selector);
+			} else if($total > $findLimit) {
+				$result = $pages->findMany($selector);
+			} else {
+				$result = $pages->find($selector);
+			}
+		}
+
+		return $result;
+	}
+
+	/**
+	 * Find first database page column from table #reference
+	 * @param Field $field
+	 * @param Page $page
+	 * @return false|int|string
+	 */
+	public function ___getDbColumn(Field $field, Page $page) {
+		$column = false;
+		if($field->type instanceof FieldtypePageTable) {
+			$column = 'data';
+		} elseif($field->type instanceof FieldtypeTable) {
+			$tableFields = $field->type->getColumns($field);
+			$column = array_search('Page', array_column($tableFields, 'valid', 'name') );
+		}
+		return $column;
+	}
+
+	/**
+	 * Setup field and template, create folder page
+	 * @param string $newFieldName
+	 * @return void
+	 * @throws WireException
+	 */
+	public function ___setupFieldAndTemplate(string $newFieldName = 'ptn') {
+
+		$newFieldName = $this->sanitizer->sanitize($newFieldName, 'fieldName,filename');
+		if(empty($newFieldName)) throw new \Exception('Empty field name');
+		$newFolderName = 'content-elements';
+
+		/** ************************************************** CREATE FIELD */
+
+		$ptnFieldData = $this->getData('fields')['ptn'];
+		$ptnFieldData['name'] = $newFieldName;
+		$ptnField = null;
+
+		// Check existing fields
+		if($foundField = $this->fields->getAll()->get($newFieldName)) {
+			if($foundField->type instanceof FieldtypePageTableNext) {
+				$ptnField = $foundField;
+				$this->message(sprintf($this->_('Use existing field: %s'), $foundField->name));
+			}
+			else throw new \Exception('Fieldname is already in use');
+		}
+
+		// Create field
+		else {
+			$ptnField = new Field();
+			$ptnField->setImportData($ptnFieldData);
+			$ptnField->save();
+			$this->message(sprintf($this->_('Create field: %s'), $newFieldName));
+		}
+
+		/** ************************************************** CREATE TEMPLATE */
+
+		$ceTemplateData = $this->getData('templates')['content-elements'];
+		$newTemplateName = 'content-elements';
+		$ceTemplate = null;
+
+		// Check existing template
+		if($foundTemplate = $this->templates->get($newTemplateName)) {
+			$ceTemplate = $foundTemplate;
+			$this->message(sprintf($this->_('Use existing template: %s'), $foundTemplate->name));
+		}
+
+		// Create fieldgroup and template
+		else {
+			$fg = new Fieldgroup();
+			$fg->name = $newTemplateName;
+			foreach ($ceTemplateData['fieldgroupFields'] as $fieldname) $fg->add($fieldname);
+			$fg->save();
+			$ceTemplate = new Template();
+			$ceTemplate->setImportData($ceTemplateData) ;
+			$ceTemplate->save();
+			$this->message(sprintf($this->_('Create template: %s'), $newTemplateName));
+		}
+
+		/** ************************************************** COPY RENDER FILE */
+
+		$renderFileName = $newFieldName;
+
+		// Check file with same name exists
+		if(file_exists($this->config->paths->fieldTemplates . "{$renderFileName}.php")) {
+
+			// same file
+			if(
+				hash_file('sha256', $this->config->paths->fieldTemplates . "{$renderFileName}.php") ===
+				hash_file('sha256', $this->config->paths->PageTableNext . "data/ptn.php")
+			) {
+				$this->message(sprintf($this->_('Render file already exists in: %s'), $this->config->urls->fieldTemplates . $renderFileName . '.php'));
+			}
+
+			// other file
+			else {
+				$renderFileName = '__' . $renderFileName;
+				$this->warning(sprintf($this->_('Please remove "__" from render file in: %s'), $this->config->urls->fieldTemplates . $renderFileName . '.php'));
+			}
+
+		}
+
+		else {
+			$this->message(sprintf($this->_('Render file are copied to: %s'), $this->config->urls->fieldTemplates . $renderFileName . '.php'));
+		}
+
+		$this->files->copy(
+			$this->config->paths->PageTableNext . 'data/ptn.php',
+			$this->config->paths->fieldTemplates . "{$renderFileName}.php"
+		);
+
+		/** ************************************************** CREATE CONTENT ELEMENT FOLDER PAGE */
+
+		$ce = $this->pages->getByPath($this->config->urls->admin . $newFolderName);
+
+		// Page already exists
+		if($ce->id) {
+			$this->message(sprintf($this->_('content elements folder already exists'), $ce->path));
+		}
+
+		// Create page
+		else {
+			$ce = $this->pages->newPage([
+				'template' => $ceTemplate,
+				'name' => $newFolderName,
+				'parent' => $this->config->urls->admin,
+				'title' => $this->_('Content Elements'),
+				'status' => Page::statusHidden
+			]);
+			$ce->save();
+			$this->message(sprintf($this->_('Create content elements folder'), $ce->path));
+		}
+
+		/** ************************************************** UPDATE FIELD */
+
+		if($ptnField instanceof Field) {
+			$ptnField->set('parent_id', $ce->id);
+			$ptnField->save();
+		}
+
+
+	}
+
+	/**
+	 * Get field data
+	 * @return mixed
+	 */
+	private function getData(string $data) {
+		$fields_json = file_get_contents(__DIR__ . "/data/{$data}.json");
+		return json_decode($fields_json, true);
+	}
+
+}

@@ -1,0 +1,82 @@
+
+.InputfieldPageTableNext .ui-accordion.ui-widget .ui-accordion-header {
+	display: flex;
+	background-color: transparent;
+	color: inherit;
+	padding: 0 0 0 12px;
+}
+.InputfieldPageTableNext .ui-accordion.ui-widget .ui-accordion-header a {
+	color: inherit;
+}
+
+.InputfieldPageTableNext .ui-accordion.ui-widget .ui-accordion-header .ui-accordion-header-icon {
+	left: -6px;
+}
+
+.InputfieldPageTableNext .ui-state-default .ui-icon, .ui-state-hover .ui-icon, .ui-state-highlight .ui-icon, .ui-state-error .ui-icon {
+	background-image: url(/wire/modules/AdminTheme/AdminThemeUikit/uikit-pw/images/ui-icons_222222_256x240.png);
+}
+
+.InputfieldPageTableNext table,
+.InputfieldPageTableNext tbody,
+.InputfieldPageTableNext tr,
+.InputfieldPageTableNext td,
+.InputfieldPageTableNext th {
+	display: block;
+}
+
+.InputfieldPageTableNext table .ui-sortable-helper {
+	width: 100%;
+}
+
+.InputfieldPageTableNext table .ui-sortable-placeholder {
+	min-height: 38px;
+}
+
+.ptn {
+	background-color: rgba(255,255,255,.8);
+}
+
+.ptn:hover .ptn_meta {
+	background: linear-gradient(to right, transparent 0, #f1f1f1 120px calc(100% - 120px), transparent);
+}
+
+.ptn_meta {
+	user-select: none;
+}
+
+.ptn_label {
+
+}
+
+[data-iscopy] .ptn_label { color: silver; }
+
+.ptn_label_icon {
+	margin-left: -6px;
+}
+
+[data-iscopy] .ptn_label_icon { visibility: hidden }
+
+.ptn_label_icon:nth-child(2) {
+	display: none;
+}
+
+.ptn_collapse {
+	transition-property: all!important;
+	overflow: hidden;
+	display: none;
+}
+
+.ptn_actions {}
+.ptn_actions a,
+.ptn_actions a:focus,
+.InputfieldPageTableNext .InputfieldPageTableButtonsColumn .ui-button
+{
+	background: rgba(192, 192, 192, 1);
+	color: black;
+	text-decoration: none;
+}
+.ptn_actions a:hover,
+.InputfieldPageTableNext .InputfieldPageTableButtonsColumn .ui-button:hover {
+	background: rgba(192, 192, 192, .7) !important;
+}

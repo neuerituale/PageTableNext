@@ -1,0 +1,277 @@
+<?php
+
+/**
+ * COPYRIGHT NOTICE
+ * Copyright (c) 2022 Neue Rituale GbR
+ * @author NR <code@neuerituale.com>
+ * @license MIT
+ */
+
+namespace ProcessWire;
+
+/**
+ * @method string renderTable(array $columns)
+ * @method string buildFileNameForRenderValue(Page $section, bool $withExtension = false)
+ */
+
+class InputfieldPageTableNext extends InputfieldPageTable {
+
+	public static function getModuleInfo() {
+		return array(
+			'title' => __('PageTableNext'),
+			'summary' => __('Add Inputfield for PageTableNext'),
+			'version' => 200,
+			'requires' => ['FieldtypePageTableNext', 'PageTableNext'],
+			'permanent' => false,
+		);
+	}
+
+	public function init() {
+		parent::init();
+
+		$this->set('nameFormat', '{template.label|template.name}');
+
+		$this->modules->get('JqueryUI')->use('vex');
+	}
+
+	/**
+	 * Render Field
+	 * @return string
+	 * @throws \Exception
+	 */
+	public function ___render() : string {
+
+		$ptnTemplate = new TemplateFile($this->getTemplateFilePath('ptn'));
+		try {
+			$ptnTemplate->set('value', $this->renderField());
+			$ptnTemplate->set('page', $this->hasPage);
+			$ptnTemplate->set('ptn', $this);
+		} catch(\Exception $e) {
+			echo "<pre>";
+			var_dump($e);
+			echo "</pre>";
+		}
+
+		return $ptnTemplate->render();
+	}
+
+	/**
+	 * Render the PageTable Inputfield
+	 * @return string
+	 * @throws WireException
+	 * @throws WirePermissionException
+	 */
+	public function ___renderField() : string {
+
+		// make sure we've got enough info to generate a table
+		$errors = array();
+		if(!count($this->rowTemplates)) $errors[] = $this->_('Please configure this field with a template selection before using it.');
+		if(count($errors)) return "<div uk-alert class='uk-alert-danger'><p>" . implode('<br />', $errors) . "</p></div>";
+
+		// render the table
+		$out = $this->renderTable([]);
+		if($this->renderValueMode) return $out;
+
+		$editID = (int) $this->wire('input')->get('id');
+		if(!$editID && $this->wire('process') instanceof WirePageEditor) $editID = $this->wire('process')->getPage()->id;
+		$parentID = $this->parent_id ? $this->parent_id : $editID;
+
+		// render the 'Add New' buttons for each template
+		$buttonsSets = [];
+		$respectedTags = explode(' ', $this->hasField->respectedTags);
+
+		foreach($this->rowTemplates as $template) {
+			/** @var Template $template */
+			$button = $this->wire('modules')->get('InputfieldButton');
+			$button->icon = $template->icon ?: 'plus-circle';
+			$button->value = count($this->rowTemplates) == 1 ? $this->_x('Add New', 'button') : $template->getLabel();
+			$button->addClass('uk-margin-remove');
+			$url = $this->wire('config')->urls->admin . "page/add/?modal=1&template_id=$template->id&parent_id=$parentID&context=PageTable";
+			if($this->nameFormat) $url .= "&name_format=" . $this->wire('sanitizer')->entities($this->nameFormat);
+
+			$templateTags = explode(' ', $template->tags);
+			$intersections = array_values( array_intersect($respectedTags, $templateTags) );
+			$buttonsSets[count($intersections) ? $intersections[0] : $this->_('Sonstige')][] = "<span style='display:block' class='InputfieldPageTableAdd' data-url='$url'>" . $button->render() . "</span>";
+		}
+
+		$out .= "<hr class='uk-margin-medium-top'><div class='InputfieldPageTableButtons uk-divider uk-margin-top uk-margin-remove-bottom uk-flex uk-flex-wrap uk-child-width-expand@m' style='gap: 20px'>";
+
+		foreach($buttonsSets as $title => $buttonSet) {
+			$out .= "<div class='InputfieldPageTableButtonsColumn uk-margin-small-top'>";
+			if(count($buttonsSets) > 1) $out .= "<h6 class='uk-margin-small-bottom uk-text-muted uk-text-italic'>$title</h6>";
+			$out .= '<small class="uk-flex uk-flex-wrap" style="gap: 5px">' . implode(' ', $buttonSet) . '</small>';
+			$out .= "</div>";
+		}
+		$out .= '</div>';
+
+		// essentials
+		// sort and deleted fields
+		if(!$this->wire('input')->get('InputfieldPageTableField')) {
+			$url = $this->config->urls->httpAdmin . "page/edit/?id={$editID}&InputfieldPageTableField={$this->name}";
+			$out = "<div class='InputfieldPageTableContainer' data-fieldname='{$this->attr('name')}' data-url='$url' data-noclose='$this->noclose'>$out</div>";
+			// input for sorting purposes
+			$value = $this->wire('sanitizer')->entities($this->attr('value'));
+			$name = $this->wire('sanitizer')->entities($this->attr('name'));
+			$out .= "<input type='hidden' name='$name' class='InputfieldPageTableSort' value='$value' />";
+			$out .= "<input type='hidden' name='{$name}__delete' class='InputfieldPageTableDelete' value='' />";
+
+			if($this->orphans && count($this->orphans)) {
+				$out .= "<p class='InputfieldPageTableOrphans'>";
+				$out .= "<span>" . $this->_('Children were found that may be added to this table. Check the box next to any you would like to add.') . "</span> ";
+				if(count($this->orphans) > 1) $out .= "<br /><a class='InputfieldPageTableOrphansAll' href='#'>" . $this->_('Select all') . "</a> ";
+				foreach($this->orphans as $item) {
+					$label = $item->title;
+					if(!strlen($label)) $label = $item->name;
+					$out .= "<label><input type='checkbox' name='{$this->name}__add_orphan[]' value='$item->id' /> <span class='detail'>$label</span></label>";
+				}
+				$out .= "</p>";
+			}
+		}
+
+		return $out;
+	}
+
+	/**
+	 * Render Table
+	 * @param array $columns
+	 * @return string
+	 * @throws \Exception
+	 */
+	public function ___renderTable(array $columns) : string {
+
+		$page = $this->hasPage;
+		$sections = [];
+
+		$fileName = $this->getTemplateFilePath('ptn-content');
+
+		// Add sections
+		/** @var Page $section */
+		foreach($this->attr('value') as $section) {
+
+			$section->of(true);
+			$sectionOutTemplate = new TemplateFile($fileName);
+			$sectionOutTemplate->set('page', $page);
+			$sectionOutTemplate->set('value', $section);
+			$sectionOutTemplate->set('ptn', $this);
+			$sections[] = $sectionOutTemplate;
+		}
+
+		$ptnTable = new TemplateFile($this->getTemplateFilePath('ptn-table'));
+		$ptnTable->set('page', $page);
+		$ptnTable->set('value', $sections);
+		$ptnTable->set('ptn', $this);
+
+		return $ptnTable->render();
+	}
+
+	/**
+	 * Get template file location
+	 * @param $name
+	 * @return false|string
+	 * @throws \Exception
+	 */
+	public function getTemplateFilePath($name) {
+		if(empty($name)) throw new \Exception('Empty template file name');
+		return $this->getFileLocation(
+			$name . '.' . $this->config->templateExtension,
+			'paths'
+		);
+	}
+
+	/**
+	 * Get file location
+	 * @param $fileName
+	 * @param string $from
+	 * @return string
+	 * @throws \Exception
+	 */
+	public function getFileLocation($fileName, string $from = 'urls') : string {
+
+		if(empty($fileName)) throw new \Exception('Empty file name');
+
+		$fileName = $this->sanitizer->filename($fileName);
+		return file_exists($this->config->paths->templates . 'PageTableNext/' . $fileName)
+			? $this->config->get($from)->templates . 'PageTableNext/' . $fileName
+			: $this->config->get($from)->FieldtypePageTableNext . 'templates/' . $fileName
+			;
+	}
+
+	/**
+	 * Simple wrapper for Page::renderValue
+	 * @param Page $context
+	 * @param Page $value
+	 * @return mixed|string
+	 */
+	public function ___renderValueWrapper(Page $context, Page $value) {
+
+		$file = $this->buildFileNameForRenderValue($value, true);
+
+		if(file_exists($this->config->paths->fieldTemplates . $file)) {
+			return $context->renderValue($value, $file);
+		} else {
+			return '<small><i>'.sprintf($this->_('Template not found: "%s"'), $this->config->urls->fieldTemplates . $file).'</i></small>';
+		}
+
+	}
+
+	/**
+	 * Build filename with field configured path segment.
+	 * @param Page $section
+	 * @param bool $withExtension
+	 * @return string
+	 */
+	public function ___buildFileNameForRenderValue(Page $section, bool $withExtension = false) {
+
+		$path = trim($this->sanitizer->path($this->hasField->pathToTemplates), '/');
+		$filename = $section->template->name;
+		if(!empty($path)) $filename = $path . '/' . $filename;
+		if($withExtension) $filename .= '.' . $this->config->templateExtension;
+		return $filename;
+	}
+
+	/**
+	 * Get the inputfield config fields
+	 * @return InputfieldWrapper
+	 */
+	public function ___getConfigInputfields() {
+
+		$inputfields = parent::___getConfigInputfields();
+
+		// remove columns field from pageTable
+		$inputfields->remove('columns');
+		$inputfields->remove('noclose');
+
+		// find tags
+		$tags = [];
+		foreach($this->value as $item) {
+			foreach(explode(' ', $item->template->get('tags')) as $tag) $tags[$tag] = $tag;
+		}
+
+		/** @var InputfieldTextTags */
+		$inputfields->add([
+			'type' => 'TextTags',
+			'label' => $this->_('Grouped add buttons'),
+			'name' => 'respectedTags',
+			'value' => $this->hasField->respectedTags,
+			'description' => $this->_('Add tags to the template to group them at the input field. Recommended if you use a lot of templates.'),
+			'notes' => $this->_('For example "text, teaser, others"'),
+			'allowUserTags' => false,
+			'tagsList' => $tags,
+			'collapsed' => Inputfield::collapsedBlank
+		]);
+
+		/** @var InputfieldTextTags */
+		$inputfields->add([
+			'type' => 'Text',
+			'label' => $this->_('Path to content element templates'),
+			'name' => 'pathToTemplates',
+			'value' => $this->hasField->pathToTemplates,
+			'description' => $this->_('If you use a delegated template approach, please provide your path to the templates (relative to templates/fields directory).'),
+			'notes' => $this->_('For example "controllers/"'),
+			'collapsed' => Inputfield::collapsedBlank
+		]);
+
+		return $inputfields;
+	}
+
+}

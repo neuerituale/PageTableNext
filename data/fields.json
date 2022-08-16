@@ -1,0 +1,27 @@
+{
+	"ptn": {
+		"name": "ptn",
+		"label": "Content Elements",
+		"flags": 32768,
+		"type": "FieldtypePageTableNext",
+		"parent_id": 0,
+		"trashOnDelete": 2,
+		"unpubOnTrash": 0,
+		"unpubOnUnpub": 0,
+		"collapsed": 9,
+		"noclose": 0,
+		"pathToTemplates": "ptn/",
+		"nameFormat": "{template.label|template.name}",
+		"template_id": [],
+		"derefAsPage": 0,
+		"allowUnpub": "",
+		"showIf": "",
+		"themeOffset": "",
+		"themeBorder": "",
+		"themeColor": "",
+		"columnWidth": 100,
+		"required": "",
+		"requiredIf": "",
+		"respectedTags": ""
+	}
+}

@@ -1,0 +1,56 @@
+<?php
+
+/**
+ * COPYRIGHT NOTICE
+ * Copyright (c) 2022 Neue Rituale GbR
+ * @author NR <code@neuerituale.com>
+ * @license MIT
+ */
+
+namespace ProcessWire;
+
+class FieldtypePageTableNext extends FieldtypePageTable {
+
+	public static function getModuleInfo() {
+		return array(
+			'title' => __('PageTable Next'),
+			'summary' => __('PageTable with encapsulated admin preview'),
+			'version' => 200,
+			'requires' => ['InputfieldPageTableNext', 'FieldtypePageTable'],
+			'installs' => ['InputfieldPageTableNext', 'FieldtypePageTable'],
+			'autoload' => false,
+		);
+	}
+
+	/**
+	 * Get the Inputfield used for input by PageTableExtended
+	 *
+	 * @param Page $page
+	 * @param Field $field
+	 * @return InputfieldPageTableNext
+	 *
+	 * @throws WirePermissionException
+	 */
+	public function getInputfield(Page $page, Field $field) {
+		/** @var InputfieldPageTableNext $inputfield */
+		$inputfield = $this->modules->get('InputfieldPageTableNext');
+		$inputfield->attr('value', $page->getUnformatted($field->name));
+		return $inputfield;
+	}
+
+	/**
+	 * Config fields
+	 * @param Field $field
+	 * @return InputfieldWrapper
+	 */
+	public function ___getConfigInputfields(Field $field) {
+		$inputfields = parent::___getConfigInputfields($field);
+
+		// remove sortfields field from pageTableConfig
+		$inputfields->remove('sortfields');
+
+		return $inputfields;
+
+	}
+
+}
