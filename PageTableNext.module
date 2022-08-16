@@ -157,7 +157,6 @@ class PageTableNext extends WireData implements Module {
 	/**
 	 * Find embed page for all "section-" templates
 	 * and manipulate localhttpurl
-	 * @see https://koerber.locale/#s3646
 	 *
 	 * @param HookEvent $event
 	 * @return void

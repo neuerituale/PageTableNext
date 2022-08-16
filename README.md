@@ -111,7 +111,7 @@ and copy the corresponding files there. Now you can edit the files.
 ### Styling
 #### Variant 1: 
 Copy your style file into the folder ```/site/templates/PageTableNext/content.css``` 
-or set a symlink to your style file- symlink content.css
+or set a symlink to your style file.
 
 ```shell
 cd site/templates/PageTableNext/
