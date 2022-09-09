@@ -20,7 +20,7 @@ class InputfieldPageTableNext extends InputfieldPageTable {
 		return array(
 			'title' => __('PageTableNext'),
 			'summary' => __('Add Inputfield for PageTableNext'),
-			'version' => 200,
+			'version' => 201,
 			'requires' => ['FieldtypePageTableNext', 'PageTableNext'],
 			'permanent' => false,
 		);

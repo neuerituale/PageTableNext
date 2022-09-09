@@ -27,7 +27,7 @@ class PageTableNext extends WireData implements Module {
 		return array(
 			'title' => __('PageTable Next'),
 			'summary' => __('PageTable with scoped admin preview'),
-			'version' => 1,
+			'version' => 201,
 			'requires' => ['InputfieldPageTableNext', 'FieldtypePageTableNext', 'FieldtypePageTable'],
 			'installs' => ['InputfieldPageTableNext', 'FieldtypePageTableNext', 'FieldtypePageTable', 'ProcessPageClone'],
 			'autoload' => true,

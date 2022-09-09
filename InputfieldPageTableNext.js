@@ -338,7 +338,7 @@ customElements.define('ptn-content', PtnContent);
 			const actionName = helper.ucFirst(action);
 
 			if(contentElementInstance && helper.isFunction(contentElementInstance['action' + actionName])) {
-				return contentElementInstance['action' + actionName].call(self, e, params);
+				return contentElementInstance['action' + actionName].call(self, params, e);
 			} else {
 				console.info('ContentElementInstance has no action with name: "action' + actionName + '"')
 				return Promise.reject();
@@ -374,8 +374,8 @@ customElements.define('ptn-content', PtnContent);
 				// call
 				return customActions[actionName].call(
 					helper.getCEInstanceByEvent(e),
-					e,
-					data?.params ?? undefined
+					data?.params ?? undefined,
+					e
 				);
 			} else {
 				console.info('Missing action "'+actionName+'" in "$.InputfieldPageTableNextContentElementCustomActions"');
@@ -670,7 +670,8 @@ customElements.define('ptn-content', PtnContent);
 			isDeleted: false,
 			//isTrash: false,
 
-			unpubUrl: ''
+			unpubUrl: '',
+			deleteConfirm: '',
 		};
 
 		self.options = $.extend({}, defaults, options);
@@ -738,7 +739,7 @@ customElements.define('ptn-content', PtnContent);
 
 			return new Promise(function (resolve, reject) {
 				if(!self.options.deletable) return reject();
-				if(confirm) ProcessWire.confirm('wirklich löschen?', resolve, reject);
+				if(confirm) ProcessWire.confirm(self.options.deleteConfirm, resolve, reject);
 				else resolve();
 			})
 				.then(function() {
@@ -967,6 +968,7 @@ customElements.define('ptn-content', PtnContent);
 			self.options.editUrl = self.$context.data('editurl');
 			self.options.deleteUrl = self.$context.data('deleteurl');
 			self.options.insertUrl = self.$context.data('inserturl');
+			self.options.deleteConfirm = self.$context.data('deleteconfirm');
 
 			self.$collapse = self.$context.find(self.options.collapseSelector)
 			self.collapsed = sessionStorage.getItem(helper.collapseStorageKey()) !== 'false';

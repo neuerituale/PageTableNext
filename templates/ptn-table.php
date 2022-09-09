@@ -11,10 +11,12 @@ namespace ProcessWire;
 /**
  * @global array $value
  * @global Page $page
+ * @global Modules $modules
  * @global Config $config
  *
  */
-
+/** @var PageTableNext $pageTableNext */
+$pageTableNext = $modules->get('PageTableNext');
 $adminUrl = $this->wire('config')->urls->admin;
 ?>
 
@@ -48,6 +50,7 @@ $adminUrl = $this->wire('config')->urls->admin;
 						data-unpuburl="<?= $adminUrl ?>page/?id=<?= $contentElement->id; ?>&render=json"
 						data-editurl="./?id=<?= $contentElement->id; ?>&modal=1"
 						data-deleteurl="<?= $adminUrl ?>page/?action=trash&id=<?= $contentElement->id; ?>&render=json"
+						data-deleteconfirm="<?= sprintf(__('Are you sure you want to delete "%s"?'), $pageTableNext->getContentElementTitle($contentElement, false)); ?>"
 						data-inserturl="<?= $adminUrl ?>page/?action=clone&id=<?= $contentElement->id; ?>&render=json"
 					>
 						<td><?= $row->render(); ?></td>

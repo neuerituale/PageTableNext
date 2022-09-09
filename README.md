@@ -187,7 +187,7 @@ Add a button to the list of actions in the file ```ptn-content```.
 Register your action e.g. in the file ```ptn.php```.
 ```html
 <script>
-    $.InputfieldPageTableNextContentElementCustomActions.actionMyaction = function (event, params) {
+    $.InputfieldPageTableNextContentElementCustomActions.actionMyaction = function (params, event) {
         /** PointerEvent */
         const clickEvent = event;
     
