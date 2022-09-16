@@ -15,8 +15,8 @@ class FieldtypePageTableNext extends FieldtypePageTable {
 		return array(
 			'title' => __('PageTable Next'),
 			'summary' => __('PageTable with encapsulated admin preview'),
-			'version' => 201,
-			'requires' => ['InputfieldPageTableNext', 'FieldtypePageTable'],
+			'version' => 202,
+			'requires' => ['InputfieldPageTableNext', 'FieldtypePageTable', 'ProcessWire>=' . PageTableNext::MIN_PW_VERSION, 'PHP>=' . PageTableNext::MIN_PHP_VERSION],
 			'installs' => ['InputfieldPageTableNext', 'FieldtypePageTable'],
 			'autoload' => false,
 		);

@@ -47,7 +47,7 @@ class PageTableNextConfig extends ModuleConfig
 		$inputfields = parent::getInputfields();
 
 		$fieldset = $this->modules->get('InputfieldFieldset');
-		$fieldset->label = $this->_('Setup field and template');
+		$fieldset->label = $this->_('Add new field and template');
 		$fieldset->description = $this->_("The setup creates the following: a PageTableNext field, the template for the folder page, the folder page and copies the render file for the field to the appropriate folder (usually /site/templates/fields/). If you want to use a different field name than the default, enter it in the input field. You can also use the setup to create more PageTableNext fields. The existing folder page will also be linked to this field.");
 		$inputfields->add($fieldset);
 
@@ -71,7 +71,7 @@ class PageTableNextConfig extends ModuleConfig
 		$fieldset->add([
 			'type' => 'Submit',
 			'name' => 'setup_field_and_template',
-			'value' => $this->_('Setup field'),
+			'value' => $this->_('Add new field'),
 			'secondary' => true,
 		]);
 

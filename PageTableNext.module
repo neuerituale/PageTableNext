@@ -22,13 +22,15 @@ use PDO;
 class PageTableNext extends WireData implements Module {
 
 	public $isPageTableNextContentElementCache = [];
+	const MIN_PW_VERSION = '3.0.179';
+	const MIN_PHP_VERSION = '7.4.0';
 
 	public static function getModuleInfo() {
 		return array(
 			'title' => __('PageTable Next'),
 			'summary' => __('PageTable with scoped admin preview'),
-			'version' => 201,
-			'requires' => ['InputfieldPageTableNext', 'FieldtypePageTableNext', 'FieldtypePageTable'],
+			'version' => 202,
+			'requires' => ['InputfieldPageTableNext', 'FieldtypePageTableNext', 'FieldtypePageTable', 'ProcessWire>=' . self::MIN_PW_VERSION, 'PHP>=' . self::MIN_PHP_VERSION],
 			'installs' => ['InputfieldPageTableNext', 'FieldtypePageTableNext', 'FieldtypePageTable', 'ProcessPageClone'],
 			'autoload' => true,
 			'singular' => true

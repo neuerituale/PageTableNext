@@ -20,8 +20,8 @@ class InputfieldPageTableNext extends InputfieldPageTable {
 		return array(
 			'title' => __('PageTableNext'),
 			'summary' => __('Add Inputfield for PageTableNext'),
-			'version' => 201,
-			'requires' => ['FieldtypePageTableNext', 'PageTableNext'],
+			'version' => 202,
+			'requires' => ['FieldtypePageTableNext', 'PageTableNext', 'ProcessWire>=' . PageTableNext::MIN_PW_VERSION, 'PHP>=' . PageTableNext::MIN_PHP_VERSION],
 			'permanent' => false,
 		);
 	}
@@ -74,11 +74,14 @@ class InputfieldPageTableNext extends InputfieldPageTable {
 
 		$editID = (int) $this->wire('input')->get('id');
 		if(!$editID && $this->wire('process') instanceof WirePageEditor) $editID = $this->wire('process')->getPage()->id;
-		$parentID = $this->parent_id ? $this->parent_id : $editID;
+		$parentID = $this->parent_id ?: $editID;
 
 		// render the 'Add New' buttons for each template
 		$buttonsSets = [];
-		$respectedTags = explode(' ', $this->hasField->respectedTags);
+		$respectedTags = !empty($this->hasField->respectedTags)
+			? explode(' ', $this->hasField->respectedTags)
+			: []
+		;
 
 		foreach($this->rowTemplates as $template) {
 			/** @var Template $template */
@@ -91,8 +94,9 @@ class InputfieldPageTableNext extends InputfieldPageTable {
 
 			$templateTags = explode(' ', $template->tags);
 			$intersections = array_values( array_intersect($respectedTags, $templateTags) );
-			$buttonsSets[count($intersections) ? $intersections[0] : $this->_('Sonstige')][] = "<span style='display:block' class='InputfieldPageTableAdd' data-url='$url'>" . $button->render() . "</span>";
+			$buttonsSets[count($intersections) ? $intersections[0] : $this->_('Other')][] = "<span style='display:block' class='InputfieldPageTableAdd' data-url='$url'>" . $button->render() . "</span>";
 		}
+
 
 		$out .= "<hr class='uk-margin-medium-top'><div class='InputfieldPageTableButtons uk-divider uk-margin-top uk-margin-remove-bottom uk-flex uk-flex-wrap uk-child-width-expand@m' style='gap: 20px'>";
 
@@ -241,12 +245,6 @@ class InputfieldPageTableNext extends InputfieldPageTable {
 		$inputfields->remove('columns');
 		$inputfields->remove('noclose');
 
-		// find tags
-		$tags = [];
-		foreach($this->value as $item) {
-			foreach(explode(' ', $item->template->get('tags')) as $tag) $tags[$tag] = $tag;
-		}
-
 		/** @var InputfieldTextTags */
 		$inputfields->add([
 			'type' => 'TextTags',
@@ -256,7 +254,7 @@ class InputfieldPageTableNext extends InputfieldPageTable {
 			'description' => $this->_('Add tags to the template to group them at the input field. Recommended if you use a lot of templates.'),
 			'notes' => $this->_('For example "text, teaser, others"'),
 			'allowUserTags' => false,
-			'tagsList' => $tags,
+			'tagsList' => $this->templates->getTags(),
 			'collapsed' => Inputfield::collapsedBlank
 		]);
 
