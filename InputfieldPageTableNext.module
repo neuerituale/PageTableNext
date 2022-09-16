@@ -21,7 +21,7 @@ class InputfieldPageTableNext extends InputfieldPageTable {
 			'title' => __('PageTableNext'),
 			'summary' => __('Add Inputfield for PageTableNext'),
 			'version' => 202,
-			'requires' => ['FieldtypePageTableNext', 'PageTableNext', 'ProcessWire>=' . PageTableNext::MIN_PW_VERSION, 'PHP>=' . PageTableNext::MIN_PHP_VERSION],
+			'requires' => ['FieldtypePageTableNext', 'PageTableNext', 'ProcessWire>=3.0.179', 'PHP>=7.4.0'],
 			'permanent' => false,
 		);
 	}
