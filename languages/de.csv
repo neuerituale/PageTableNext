@@ -1,0 +1,50 @@
+en,de,description,file,hash
+Public/Unpublish,Veröffentlichen/Unveröffentlichen,,site/templates/PageTableNext/ptn-content.php,e7260fe367c494b2f7c89ecb7ef26e0a
+Copy,Kopieren,,site/templates/PageTableNext/ptn-content.php,5fb63579fc981698f97d55bfecb213ea
+"Insert copy","Kopie einfügen",,site/templates/PageTableNext/ptn-content.php,b03bdb87545a78cb732b7a6433380192
+"Abort copy",Abbrechen,,site/templates/PageTableNext/ptn-content.php,9f5342fb511930de5c8837ed177acc0e
+Edit,Bearbeiten,,site/templates/PageTableNext/ptn-content.php,7dce122004969d56ae2e0245cb754d35
+Delete,Löschen,,site/templates/PageTableNext/ptn-content.php,f2a6c498fb90ee345d997f888fce3b18
+"My Custom Action","Meine benutzerdefinierte Aktion",,site/templates/PageTableNext/ptn-content.php,7b69112ff9508f795d0dc7e70b7196ce
+"Are you sure you want to delete ""%s""?","Sind Sie sicher, dass Sie ""%s"" löschen wollen?",,site/modules/PageTableNext/templates/ptn-table.php,0b6d97bdabb4f055819e5530997d16e8
+"Add content...","Inhalt hinzufügen...",,site/modules/PageTableNext/templates/ptn-table.php,1318ebcfa7bca666364eba2d7a1e3044
+"Please configure this field with a template selection before using it.","Bitte konfigurieren Sie das Feld mit einer Templateauswahl, bevor Sie es verwenden.",,site/modules/PageTableNext/InputfieldPageTableNext.module,140092f149378fe66bcd1b7e472cde79
+Other,Sonstige,,site/modules/PageTableNext/InputfieldPageTableNext.module,6311ae17c1ee52b36e68aaf4ad066387
+"Children were found that may be added to this table. Check the box next to any you would like to add.",,,site/modules/PageTableNext/InputfieldPageTableNext.module,ff63ad7fe05686c64e062c5c034ad04f
+"Select all",,,site/modules/PageTableNext/InputfieldPageTableNext.module,4c41e0bd957698b58100a5c687d757d9
+"Template not found: ""%s""","Template nicht gefunden: ""%s""",,site/modules/PageTableNext/InputfieldPageTableNext.module,b4835bf3ef3894b575926124a031ca9a
+"Grouped add buttons","Gruppierte Buttons",,site/modules/PageTableNext/InputfieldPageTableNext.module,827a7405d9e6d426037a233272b279c0
+"Add tags to the template to group them at the input field. Recommended if you use a lot of templates.","Fügen Sie den Templates Tags hinzu, um sie im Eingabefeld zu gruppieren. Empfohlen, wenn Sie viele Templates verwenden.",,site/modules/PageTableNext/InputfieldPageTableNext.module,8922742e251e5f847423db4a2597de50
+"For example ""text, teaser, others""","Zum Beispiel ""Text, Teaser, Sonstige""",,site/modules/PageTableNext/InputfieldPageTableNext.module,7f315c1eed47e8cd91bdaed1dfe09908
+"Path to content element templates","Pfad zu den Templates der Inhaltselemente",,site/modules/PageTableNext/InputfieldPageTableNext.module,2df6f68382c15967581f596c64507b49
+"Path to the templates used for rendering in the backend (relative to templates/fields directory).","Pfad zu den Templates, die für das Rendering im Backend verwendet werden (relativ zum Verzeichnis templates/fields).",,site/modules/PageTableNext/InputfieldPageTableNext.module,09f1aaab7f2172dfab281a48d3121570
+"For example ""controllers/""",,,site/modules/PageTableNext/InputfieldPageTableNext.module,e4478645f688e206d4e2f8b180fb4de6
+PageTableNext,,,site/modules/PageTableNext/InputfieldPageTableNext.module,d08bcbe8985e88a84d8552e888be2c70
+"Add Inputfield for PageTableNext","Neues PageTableNext-Feld hinzufügen",,site/modules/PageTableNext/InputfieldPageTableNext.module,624d08a059709eb34ae942acd1eb46e2
+"Add New","Neu hinzufügen","Context: button",site/modules/PageTableNext/InputfieldPageTableNext.module,d02df721111f58d691538543749d7ce0
+"Use existing field: %s","Vorhandenes Feld verwendet: %s",,site/modules/PageTableNext/PageTableNext.module,8bd72fe130bfbad520d245c976079b08
+"Create field: %s","Feld erstellt: %s",,site/modules/PageTableNext/PageTableNext.module,48cadf695ad10ec4e854e4f54f50ed4d
+"Use existing template: %s","Vorhandene Vorlage verwendet: %s",,site/modules/PageTableNext/PageTableNext.module,b6d18ca3c6e0831da6fe1ea38d3f35f2
+"Create template: %s","Template erstellt: %s",,site/modules/PageTableNext/PageTableNext.module,9f1499b737a5d0d696520e5511b4ddf3
+"Render file already exists in: %s","Ausgabedatei ist bereits vorhanden: %s",,site/modules/PageTableNext/PageTableNext.module,20619167953e4a99142ab2a16233d82f
+"Please remove ""__"" from render file in: %s","Bitte entfernen Sie ""__"" aus der Ausgabedatei in: %s",,site/modules/PageTableNext/PageTableNext.module,673c58c6e3351f4f702d9bb0fc534aa3
+"Render file are copied to: %s","Ausgabedatei wurde nach %s kopiert",,site/modules/PageTableNext/PageTableNext.module,a274107a690720dc46f41d3508f1239a
+"content elements folder already exists","Ordner für Inhaltselemente ist bereits vorhanden",,site/modules/PageTableNext/PageTableNext.module,a302022b938016440e67c507ba300a93
+"Content Elements",Inhaltselemente,,site/modules/PageTableNext/PageTableNext.module,36c021a1cea5e1c6df9c5032994658b4
+"Create content elements folder","Erstelle einen Ordner für Inhaltselemente",,site/modules/PageTableNext/PageTableNext.module,b8720ca01171281562256948b959dfee
+"PageTable Next",,,site/modules/PageTableNext/PageTableNext.module,b5da02d39e16f3d3205dc6a52ff6c64b
+"PageTable with scoped admin preview",,,site/modules/PageTableNext/PageTableNext.module,29e81364fed5aadd56c80c741db6dd67
+"Invalid field name, remove whitespace and special characters.","Ungültiger Feldname, Leerzeichen und Sonderzeichen entfernen.",,site/modules/PageTableNext/PageTableNextConfig.php,ad59737b2c531aecc6c074426eaadcdc
+"Add new field and template","Neues Feld und Template hinzufügen",,site/modules/PageTableNext/PageTableNextConfig.php,629a8eb084da797931a928547b8f4c86
+"The setup creates the following: a PageTableNext field, the template for the folder page, the folder page and copies the render file for the field to the appropriate folder (usually /site/templates/fields/). If you want to use a different field name than the default, enter it in the input field. You can also use the setup to create more PageTableNext fields. The existing folder page will also be linked to this field.","Das Setup erstellt Folgendes: ein PageTableNext-Feld, das Template für die Ordnerseite, die Ordnerseite und kopiert die Ausgabedatei für das Feld in den Ordner (normalerweise: /site/templates/fields/). Wenn Sie einen anderen Feldnamen als den Standardnamen verwenden möchten, geben Sie ihn in das Eingabefeld ein. Sie können das Setup auch verwenden, um weitere PageTableNext-Felder anzulegen. Die bestehende Ordnerseite wird ebenfalls mit diesem Feld verknüpft.",,site/modules/PageTableNext/PageTableNextConfig.php,4510f4b9f3eccde275166ac02a60392a
+Fieldname,Feldname,,site/modules/PageTableNext/PageTableNextConfig.php,d5337b4d4789fb0353bf92ba5c71278b
+"Please check if the file /site/templates/fields/[fieldname].php already exists.","Bitte prüfen Sie, ob die Datei /site/templates/fields/[fieldname].php bereits existiert.",,site/modules/PageTableNext/PageTableNextConfig.php,8b5213c954953f9f61af839248c913fe
+"Add new field","Neues Feld hinzufügen",,site/modules/PageTableNext/PageTableNextConfig.php,be59f3154959c4958b2554645502b30f
+"PageTable Next",,,site/modules/PageTableNext/FieldtypePageTableNext.module,b5da02d39e16f3d3205dc6a52ff6c64b
+"PageTable with encapsulated admin preview",,,site/modules/PageTableNext/FieldtypePageTableNext.module,4fd3ed1243e4de2f0670b48eb9730e87
+Public/Unpublish,Veröffentlichen/Unveröffentlichen,,site/modules/PageTableNext/templates/ptn-content.php,e7260fe367c494b2f7c89ecb7ef26e0a
+Copy,Kopieren,,site/modules/PageTableNext/templates/ptn-content.php,5fb63579fc981698f97d55bfecb213ea
+"Insert copy","Kopie einfügen",,site/modules/PageTableNext/templates/ptn-content.php,b03bdb87545a78cb732b7a6433380192
+"Abort copy",Abbrechen,,site/modules/PageTableNext/templates/ptn-content.php,9f5342fb511930de5c8837ed177acc0e
+Edit,Bearbeiten,,site/modules/PageTableNext/templates/ptn-content.php,7dce122004969d56ae2e0245cb754d35
+Delete,Löschen,,site/modules/PageTableNext/templates/ptn-content.php,f2a6c498fb90ee345d997f888fce3b18
