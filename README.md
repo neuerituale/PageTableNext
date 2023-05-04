@@ -1,10 +1,9 @@
 # PageTableNext
 
 ## What it does
-The module provides a list of PageTable based content elements. It enables the backend user to easily create, publish, move, delete,
-copy and paste content elements.
+This module is a solid base for the implementation of custom builder systems and modular template systems. It provides a list of PageTable based content elements and adds an intuitive UI to the ProcessWire backend to make content creation and editing as simple and fun as possible. It offers functions to create, publish, move, delete, hide, copy and paste content elements.
 
-The rendering logic of the module is detached from the ProcessWire backend scope via Shadow DOM and allows the elements rendering identical to the front end. It ships with some helper functions that simplify the handling
+The rendering logic of the module is detached from the ProcessWire backend scope via Shadow DOM and allows for custom rendering and styling of the elements in the backend, so the backend preview can look identical to the front end, or anything like you can imagine. It ships with some helper functions that simplify the handling
 of content elements.
 
 The module extends Ryan's PageTable and is strongly inspired by
@@ -12,12 +11,12 @@ The module extends Ryan's PageTable and is strongly inspired by
 Big thanks to both of them.
 
 ## Features
-- Full frontend preview in the backend. Content elements are encapsulated in Shadow DOM.
+- Custom rendering (e.g. frontend preview) in the backend. Content elements are encapsulated in Shadow DOM.
 - Instant publishing and unpublishing.
 - Copy and paste with check of allowed templates (page-wide).
 - Editing in the ProcessWire modal.
 - Instant deletion of content elements.
-- Add custom JavaScript actions.
+- Custom JavaScript actions can be easily added.
 - Page references support.
 - Triggers save on all referenced pages (e.g. clear cache).
 - Shows the "view" link in the edit view that leads to the referenced page ```/link/to/parent/#s[PageId]```.
@@ -66,7 +65,7 @@ You can use a different custom element
 [by extending the class "PtnContent"](#override_custom_element).
 ````js
 class PtnContent extends HTMLElement {
-    constructor() { /* some code here*/ }
+	constructor() { /* some code here*/ }
 }
 
 customElements.define('ptn-content', PtnContent);
@@ -176,29 +175,29 @@ Add a button to the list of actions in the file ```ptn-content```.
 
 ```html
 <a
-    class="uk-icon-button uk-icon ptn_actions_custom"
-    data-actioncustom='{"name": "myaction", "params": "your method input"}'
-    href="#"
-    uk-icon="icon: bolt; ratio: .8"
-    title="<?= __('My Custom Action'); ?>"
+		class="uk-icon-button uk-icon ptn_actions_custom"
+		data-actioncustom='{"name": "myaction", "params": "your method input"}'
+		href="#"
+		uk-icon="icon: bolt; ratio: .8"
+		title="<?= __('My Custom Action'); ?>"
 ></a>
 ```
 
 Register your action e.g. in the file ```ptn.php```.
 ```html
 <script>
-    $.InputfieldPageTableNextContentElementCustomActions.actionMyaction = function (params, event) {
-        /** PointerEvent */
-        const clickEvent = event;
-    
-        /** mixed (your custom parameter) */
-        const myParams = params;
-    
-        /** $.InputfieldPageTableNextContentElement */
-        const contentElementInstance = this;
-    
-        /** $.InputfieldPageTableNext */
-        const table = this.getParent();
-    }
+	$.InputfieldPageTableNextContentElementCustomActions.actionMyaction = function (params, event) {
+		/** PointerEvent */
+		const clickEvent = event;
+
+		/** mixed (your custom parameter) */
+		const myParams = params;
+
+		/** $.InputfieldPageTableNextContentElement */
+		const contentElementInstance = this;
+
+		/** $.InputfieldPageTableNext */
+		const table = this.getParent();
+	}
 </script>
 ```
