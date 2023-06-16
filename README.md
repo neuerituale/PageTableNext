@@ -50,6 +50,11 @@ Big thanks to both of them.
 5. Copy the file from the module folder ```/site/modules/PageTableNext/data/ptn.php``` to the folder ```/site/templates/fields/[fieldname].php```. Replace "ptn" with your field name
 6. Add the field to your page template and add some content element templates to the new PageTableNext field.
 
+## Install via composer
+1. Execute the following command in your website root directory.
+   ```bash
+   composer require nr/pagetablenext
+
 ## Rendering
 
 ### Frontend
