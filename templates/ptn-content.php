@@ -2,7 +2,7 @@
 
 /**
  * COPYRIGHT NOTICE
- * Copyright (c) 2022 Neue Rituale GbR
+ * Copyright (c) 2023 Neue Rituale GbR
  * @author NR <code@neuerituale.com>
  * @license MIT
  */
@@ -12,6 +12,7 @@ namespace ProcessWire;
 /**
  * @global Page $value
  * @global Page $page
+ * @global User $user
  * @global InputfieldPageTableNext $ptn
  *
  * @global Modules $modules
@@ -50,7 +51,7 @@ $pageTableNext = $modules->get('PageTableNext');
 				</a>
 			<?php endif;?>
 
-			<?php if($modules->isInstalled('ProcessPageClone')) : ?>
+			<?php if($modules->isInstalled('ProcessPageClone') && $user->hasPermission('page-clone', $value)) : ?>
 				<a
 					class="uk-icon-button uk-icon ptn_actions_copy"
 					href="#"

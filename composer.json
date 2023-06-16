@@ -1,0 +1,25 @@
+{
+    "name": "nr/pagetablenext",
+    "type": "pw-module",
+    "description": "PageTable with scoped admin preview",
+    "keywords": [ "processwire", "module", "modules", "content elements", "content toolkit" ],
+    "homepage": "https://github.com/neuerituale/PageTableNext",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Neue Rituale",
+            "email": "code@neuerituale.com",
+            "homepage": "https://neuerituale.com/",
+            "role": "Developer"
+        }
+    ],
+    "minimum-stability": "beta",
+    "require": {
+        "hari/pw-module": "~1.0"
+    },
+    "config": {
+        "allow-plugins": {
+            "hari/pw-module": true
+        }
+    }
+}

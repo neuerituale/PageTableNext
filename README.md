@@ -22,6 +22,7 @@ Big thanks to both of them.
 - Triggers save on all referenced pages (e.g. clear cache).
 - Shows the "view" link in the edit view that leads to the referenced page ```/link/to/parent/#s[PageId]```.
 - Manipulates the breadcrumb navigation of the content element (Shows the first referenced page).
+- Support for [ProcessGraphQL](https://processwire.com/modules/process-graph-ql/) with the additional modules *GraphQLFieldtypePageTable* and *GraphQLFieldtypePageTableNext*
 
 ## Install (Short way)
 1. Copy the files for this module to ```/site/modules/PageTableNext/``` and Install PageTableNext, FieldtypePageTableNext and InputfieldPageTableNext.
@@ -202,3 +203,22 @@ Register your action e.g. in the file ```ptn.php```.
     }
 </script>
 ```
+
+## GraphQL
+The content elements can also be queried using GraphQL. 
+For this purpose, the data is divided into three fields: 
+`id`, `type` and `render`. 
+
+`id` is the page id of the content element.
+`type` is the template name in PascalCase.  
+`render` is everything from the content element template file `/site/fields/[content-element-template-name].php`. 
+This template is also used for the preview in the backend. 
+If you want to use a different template here, e.g. to return different fields or a serialised object, 
+you can create an additional template file with the postfix ".graphql" `/site/fields/[content-element-template-name].graphql.php`.
+
+![GraphQL](https://user-images.githubusercontent.com/11630948/246352654-886dc0ba-4c84-4f0b-a923-bc5b08849f79.png)
+*GraphQL query with Postman*
+
+## ToDos
+- Refactor content element handling with Alpine.js
+- Video-Tutorial

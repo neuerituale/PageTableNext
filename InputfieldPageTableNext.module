@@ -2,7 +2,7 @@
 
 /**
  * COPYRIGHT NOTICE
- * Copyright (c) 2022 Neue Rituale GbR
+ * Copyright (c) 2023 Neue Rituale GbR
  * @author NR <code@neuerituale.com>
  * @license MIT
  */
@@ -28,10 +28,7 @@ class InputfieldPageTableNext extends InputfieldPageTable {
 
 	public function init() {
 		parent::init();
-
 		$this->set('nameFormat', '{template.label|template.name}');
-
-		$this->modules->get('JqueryUI')->use('vex');
 	}
 
 	/**
@@ -40,6 +37,8 @@ class InputfieldPageTableNext extends InputfieldPageTable {
 	 * @throws \Exception
 	 */
 	public function ___render() : string {
+
+		$this->modules->get('JqueryUI')->use('vex');
 
 		$ptnTemplate = new TemplateFile($this->getTemplateFilePath('ptn'));
 		try {

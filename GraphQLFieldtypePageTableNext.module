@@ -1,0 +1,31 @@
+<?php
+
+/**
+ * COPYRIGHT NOTICE
+ * Copyright (c) 2023 Neue Rituale GbR
+ * @author NR <code@neuerituale.com>
+ * @license MIT
+ */
+
+namespace ProcessWire;
+
+class GraphQLFieldtypePageTableNext extends GraphQLFieldtypePageTable implements Module {
+
+	public static function getModuleInfo() {
+
+		return array(
+			'title' => 'GraphQLFieldtypePageTableNext',
+			'version' => 202,
+			'summary' => 'GraphQL support for FieldtypePageTableNext.',
+			'icon' => 'globe',
+			'requires' => ['ProcessGraphQL', 'GraphQLFieldtypePageTable'],
+			'installs' => ['ProcessGraphQL', 'GraphQLFieldtypePageTable']
+		);
+	}
+
+	public static function getType(Field $field) {
+		$type = parent::getType($field);
+		$type->config['name'] = 'PageTableNext';
+		return $type;
+	}
+}

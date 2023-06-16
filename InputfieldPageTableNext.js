@@ -852,6 +852,11 @@ customElements.define('ptn-content', PtnContent);
 							resolve();
 						}
 
+						// fail, show alert
+						else if(!json.success && json.message?.length) {
+							ProcessWire.alert(json.message);
+						}
+
 					})
 					.finally(() => {
 						self.loading = false;
