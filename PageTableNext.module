@@ -115,12 +115,30 @@ class PageTableNext extends WireData implements Module {
 	}
 
 	/**
+	 * Build path to content element e.g. /de/my-page/#s5421
+	 * @param Page $page
+	 * @param Page $reference
+	 * @param Language|null $language
+	 * @return string
+	 */
+	public function ___buildContentElementPath(Page $page, Page $reference, Language $language = null): string {
+
+		// get path
+		$path = $this->modules->isInstalled('LanguageSupportPageNames') && $language instanceof Language
+			? $reference->localPath($language)
+			: $reference->path()
+		;
+
+		return $path . '#s' . $page->id;
+	}
+
+	/**
 	 * Optimize headline, browser title and breadcrumb to sections
 	 * @param HookEvent $event
 	 * @return void
 	 * @throws WireException
 	 */
-	public function hookContentElementEditForm(HookEvent $event) {
+	public function hookContentElementEditForm(HookEvent $event): void {
 
 		/** @var ProcessPageEdit $processPageEdit */
 		$processPageEdit = $event->object;
@@ -155,7 +173,7 @@ class PageTableNext extends WireData implements Module {
 	}
 
 	/**
-	 * Find embed page for all "section-" templates
+	 * Find embed page for all content element templates
 	 * and manipulate local httpurl
 	 *
 	 * @param HookEvent $event
@@ -163,7 +181,7 @@ class PageTableNext extends WireData implements Module {
 	 * @throws WireException
 	 * @throws WirePermissionException
 	 */
-	public function hookContentElementPath(HookEvent $event) {
+	public function hookContentElementPath(HookEvent $event): void {
 
 		/** @var Page $page */
 		$page = $event->object;
@@ -174,19 +192,8 @@ class PageTableNext extends WireData implements Module {
 		// no references found
 		if(!$reference || !$reference->id) return;
 
-		// has language param
-		$language = null;
-		if($languageId = $this->input->get('language', 'int')) {
-			$language = wire()->languages->get($languageId);
-		}
-
-		// set path
-		$path = $this->modules->isInstalled('LanguageSupportPageNames')
-			? $reference->localPath($language)
-			: $reference->path()
-			;
-
-		$event->return = $path . '#s' . $page->id;
+		// build path
+		$event->return = $this->buildContentElementPath($page, $reference, $event->arguments(0));
 	}
 
 	/**
