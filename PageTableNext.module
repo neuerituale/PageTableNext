@@ -23,10 +23,10 @@ class PageTableNext extends WireData implements Module {
 
 	public static function getModuleInfo(): array {
 		return [
-			'title' => __('PageTable Next'),
+			'title' => __('PageTable Next (Controller)'),
 			'summary' => __('PageTable with scoped admin preview'),
-			'version' => 202,
-			'requires' => ['InputfieldPageTableNext', 'FieldtypePageTableNext', 'FieldtypePageTable', 'ProcessWire>=3.0.179', 'PHP>=7.4.0'],
+			'version' => 203,
+			'requires' => ['ProcessWire>=3.0.179', 'PHP>=7.4.0'],
 			'installs' => ['InputfieldPageTableNext', 'FieldtypePageTableNext', 'FieldtypePageTable', 'ProcessPageClone'],
 			'autoload' => true,
 			'singular' => true

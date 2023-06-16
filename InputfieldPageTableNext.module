@@ -18,10 +18,10 @@ class InputfieldPageTableNext extends InputfieldPageTable {
 
 	public static function getModuleInfo() {
 		return array(
-			'title' => __('PageTableNext'),
+			'title' => __('PageTableNext (Input)'),
 			'summary' => __('Add Inputfield for PageTableNext'),
-			'version' => 202,
-			'requires' => ['FieldtypePageTableNext', 'PageTableNext', 'ProcessWire>=3.0.179', 'PHP>=7.4.0'],
+			'version' => 203,
+			'requires' => ['InputfieldPageTable', 'PageTableNext'],
 			'permanent' => false,
 		);
 	}
