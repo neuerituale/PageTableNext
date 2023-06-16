@@ -2,7 +2,7 @@
 
 /**
  * COPYRIGHT NOTICE
- * Copyright (c) 2022 Neue Rituale GbR
+ * Copyright (c) 2023 Neue Rituale GbR
  * @author NR <code@neuerituale.com>
  * @license MIT
  */
@@ -13,11 +13,10 @@ class FieldtypePageTableNext extends FieldtypePageTable {
 
 	public static function getModuleInfo() {
 		return array(
-			'title' => __('PageTable Next'),
+			'title' => __('PageTable Next (Field)'),
 			'summary' => __('PageTable with encapsulated admin preview'),
-			'version' => 202,
-			'requires' => ['InputfieldPageTableNext', 'FieldtypePageTable', 'ProcessWire>=3.0.179', 'PHP>=7.4.0'],
-			'installs' => ['InputfieldPageTableNext', 'FieldtypePageTable'],
+			'version' => 203,
+			'requires' => ['FieldtypePageTable', 'PageTableNext'],
 			'autoload' => false,
 		);
 	}

@@ -2,14 +2,12 @@
 
 /**
  * COPYRIGHT NOTICE
- * Copyright (c) 2022 Neue Rituale GbR
+ * Copyright (c) 2023 Neue Rituale GbR
  * @author NR <code@neuerituale.com>
  * @license MIT
  */
 
 namespace ProcessWire;
-
-use PDO;
 
 /**
  * @method string getContentElementTitle(Page $page, $formatted = false)
@@ -21,20 +19,18 @@ use PDO;
 
 class PageTableNext extends WireData implements Module {
 
-	public $isPageTableNextContentElementCache = [];
-	const MIN_PW_VERSION = '3.0.179';
-	const MIN_PHP_VERSION = '7.4.0';
+	public array $isPageTableNextContentElementCache = [];
 
-	public static function getModuleInfo() {
-		return array(
-			'title' => __('PageTable Next'),
+	public static function getModuleInfo(): array {
+		return [
+			'title' => __('PageTable Next (Controller)'),
 			'summary' => __('PageTable with scoped admin preview'),
-			'version' => 202,
-			'requires' => ['InputfieldPageTableNext', 'FieldtypePageTableNext', 'FieldtypePageTable', 'ProcessWire>=3.0.179', 'PHP>=7.4.0'],
+			'version' => 203,
+			'requires' => ['ProcessWire>=3.0.179', 'PHP>=7.4.0'],
 			'installs' => ['InputfieldPageTableNext', 'FieldtypePageTableNext', 'FieldtypePageTable', 'ProcessPageClone'],
 			'autoload' => true,
 			'singular' => true
-		);
+		];
 	}
 
 	public function init() {
@@ -42,12 +38,8 @@ class PageTableNext extends WireData implements Module {
 		$this->addHookAfter('Page::references', $this, 'hookReferences');
 		$this->addHookAfter('Page::numReferences', $this, 'hookReferences');
 
-		// Optimize PageEditForm (headline, browsertitle and breadcrumbs)
+		// Optimize PageEditForm (headline, browser title and breadcrumbs)
 		$this->addHookBefore('ProcessPageEdit::execute', $this, 'hookContentElementEditForm');
-
-		// Manipulate localHttpUrl for content element templates
-		$this->addHook('Page::path', $this, 'hookContentElementPath', ['priority' => 150]);
-		$this->addHook('Page::localHttpUrl', $this, 'hookContentElementPath', ['priority' => 150]);
 
 		// Allow view for content element templates
 		$this->addHook('Page::viewable', $this, 'hookContentElementViewStatus');
@@ -55,16 +47,22 @@ class PageTableNext extends WireData implements Module {
 		// Invalidate content element parent page cache
 		$this->addHookAfter('Pages::saved', $this, 'hookInvalidateReferencedPagesCache');
 
-		//
-		$this->addHookBefore('InputfieldPageTableAjax::checkAjax', $this, 'hookInputfieldPageTableAjaxCheckAjax');
+		// Persist sorting on update
+		$this->addHookBefore('InputfieldPageTableAjax::checkAjax', $this, 'hookInputfieldPageTableAjaxCheckAjax', ['priority' => 200]);
+	}
+
+	public function ready() {
+		// Manipulate localHttpUrl for content element templates
+		$this->addHook('Page::path', $this, 'hookContentElementPath');
+		$this->addHook('Page::localHttpUrl', $this, 'hookContentElementPath');
 	}
 
 	/**
 	 * Check if page is a content element page
 	 * @param Page $page
-	 * @return bool|mixed
+	 * @return bool
 	 */
-	private function isPageTableNextContentElement(Page $page) {
+	private function isPageTableNextContentElement(Page $page): bool {
 
 		// skip double check
 		if(array_key_exists($page->id, $this->isPageTableNextContentElementCache)) return $this->isPageTableNextContentElementCache[$page->id];
@@ -85,7 +83,7 @@ class PageTableNext extends WireData implements Module {
 	 * Find all PageTableNext fields
 	 * @return WireArray
 	 */
-	public function ___findPageTableNextFields() {
+	public function ___findPageTableNextFields(): WireArray {
 		return $this->fields->find('type=FieldtypePageTableNext');
 	}
 
@@ -93,7 +91,7 @@ class PageTableNext extends WireData implements Module {
 	 * Find compatible field for reference Pages
 	 * @return WireArray
 	 */
-	public function ___findAdditionalReferenceFields() {
+	public function ___findAdditionalReferenceFields(): WireArray {
 		return $this->fields->find('type=FieldtypePageTableNext|FieldtypePageTableExtended|FieldtypePageTable|FieldtypeTable');
 	}
 
@@ -103,7 +101,7 @@ class PageTableNext extends WireData implements Module {
 	 * @param bool $formatted
 	 * @return string
 	 */
-	public function ___getContentElementTitle(Page $page, bool $formatted = false) {
+	public function ___getContentElementTitle(Page $page, bool $formatted = false): string {
 
 		$category = $page->template->get('label|name');
 		$title = $page->title;
@@ -117,7 +115,7 @@ class PageTableNext extends WireData implements Module {
 	}
 
 	/**
-	 * Optimize headline, browsertitle and breadcrumb to sections
+	 * Optimize headline, browser title and breadcrumb to sections
 	 * @param HookEvent $event
 	 * @return void
 	 * @throws WireException
@@ -158,20 +156,37 @@ class PageTableNext extends WireData implements Module {
 
 	/**
 	 * Find embed page for all "section-" templates
-	 * and manipulate localhttpurl
+	 * and manipulate local httpurl
 	 *
 	 * @param HookEvent $event
 	 * @return void
+	 * @throws WireException
+	 * @throws WirePermissionException
 	 */
 	public function hookContentElementPath(HookEvent $event) {
+
 		/** @var Page $page */
 		$page = $event->object;
 
 		if(!$this->isPageTableNextContentElement($page)) return;
 		$reference = $page->references('include=unpublished')->first();
 
-		// TODO make the url configurable
-		if($reference && $reference->id) $event->return = $reference->path . '#s' . $page->id;
+		// no references found
+		if(!$reference || !$reference->id) return;
+
+		// has language param
+		$language = null;
+		if($languageId = $this->input->get('language', 'int')) {
+			$language = wire()->languages->get($languageId);
+		}
+
+		// set path
+		$path = $this->modules->isInstalled('LanguageSupportPageNames')
+			? $reference->localPath($language)
+			: $reference->path()
+			;
+
+		$event->return = $path . '#s' . $page->id;
 	}
 
 	/**
@@ -232,7 +247,7 @@ class PageTableNext extends WireData implements Module {
 		$sort = $input->get('InputfieldPageTableSort');
 		if(strlen("$sort")) {
 			$inputfieldPageTableAjax->sortItems($page, $field, $sort);
-			$page->save($field->name);
+			try { $page->save($field->name); } catch(\Exception $exception) { /**/ }
 		}
 
 		$inputfieldPageTableAjax->renderAjax($page, $field);
@@ -366,7 +381,7 @@ class PageTableNext extends WireData implements Module {
 			$table = $field->getTable();
 			$sql = "SELECT COUNT(*) FROM `$table` WHERE `$column`=:id";
 			$query = $this->wire('database')->prepare($sql);
-			$query->bindValue(':id', $page->id, PDO::PARAM_INT);
+			$query->bindValue(':id', $page->id, \PDO::PARAM_INT);
 
 			$query->execute();
 			$cnt = (int) $query->fetchColumn();
@@ -491,7 +506,7 @@ class PageTableNext extends WireData implements Module {
 			$this->message(sprintf($this->_('Use existing template: %s'), $foundTemplate->name));
 		}
 
-		// Create fieldgroup and template
+		// Create field group and template
 		else {
 			$fg = new Fieldgroup();
 			$fg->name = $newTemplateName;

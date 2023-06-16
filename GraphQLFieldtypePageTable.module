@@ -1,0 +1,73 @@
+<?php
+
+/**
+ * COPYRIGHT NOTICE
+ * Copyright (c) 2023 Neue Rituale GbR
+ * @author NR <code@neuerituale.com>
+ * @license MIT
+ */
+
+namespace ProcessWire;
+
+use GraphQL\Type\Definition\ObjectType;
+use GraphQL\Type\Definition\Type;
+use ProcessWire\GraphQL\Type\PageArrayType;
+
+class GraphQLFieldtypePageTable extends WireData implements Module
+{
+	public static function getModuleInfo() {
+		return array(
+			'title' => 'GraphQLFieldtypePageTable',
+			'version' => 203,
+			'summary' => 'GraphQL support for FieldtypePageTable.',
+			'icon' => 'globe',
+			'requires' => ['ProcessGraphQL'],
+			'installs' => ['ProcessGraphQL']
+		);
+	}
+
+	public static function getType(Field $field) {
+		require_once "ContentElementType.php";
+
+		return new ObjectType([
+			'name' => 'PageTable',
+			'fields' => array_merge(PageArrayType::getPaginationFields(), [
+				[
+					'name' => 'list',
+					'type' => Type::listOf(ContentElementType::type()),
+					'description' => 'List of Content Elements',
+					'resolve' => function ($value) {
+						return $value;
+					},
+				],
+				[
+					'name' => 'first',
+					'type' => ContentElementType::type(),
+					'description' => 'Returns the first item in the PageTableArray.',
+					'resolve' => function ($value) {
+						$first = $value->first();
+						return $first ?: null;
+					},
+				],
+				[
+					'name' => 'last',
+					'type' => ContentElementType::type(),
+					'description' => 'Returns the last item in the PageTableArray.',
+					'resolve' => function ($value) {
+						$last = $value->last();
+						return $last ?: null;
+					},
+				]
+			]),
+		]);
+	}
+
+	public static function getInputType(Field $field) {
+		return Type::string();
+	}
+
+	public static function setValue(Page $page, Field $field, $value) {
+		$fieldName = $field->name;
+		$page->$fieldName = $value;
+	}
+}

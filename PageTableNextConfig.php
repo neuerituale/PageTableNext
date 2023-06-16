@@ -2,7 +2,7 @@
 
 /**
  * COPYRIGHT NOTICE
- * Copyright (c) 2022 Neue Rituale GbR
+ * Copyright (c) 2023 Neue Rituale GbR
  * @author NR <code@neuerituale.com>
  * @license MIT
  */
@@ -14,9 +14,8 @@ class PageTableNextConfig extends ModuleConfig
 
 	/**
 	 * @return array
-	 * @throws WireException
 	 */
-	public function getDefaults() {
+	public function getDefaults(): array {
 		return [];
 	}
 
@@ -59,7 +58,6 @@ class PageTableNextConfig extends ModuleConfig
 			'value' => $this->input->post('newFieldName', $fielnameSanitizer, 'ptn'),
 			'collapsed' => Inputfield::collapsedNever,
 			'themeBorder' => 'none',
-			//'wrapClass' => 'uk-background-muted',
 			'headerClass' => 'uk-padding-remove-top',
 			'wrapAttributes' => [
 				'class' => '',

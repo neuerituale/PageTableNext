@@ -2,7 +2,7 @@
 
 /**
  * COPYRIGHT NOTICE
- * Copyright (c) 2021 Neue Rituale GbR
+ * Copyright (c) 2023 Neue Rituale GbR
  * @author NR <code@neuerituale.com>
  */
 

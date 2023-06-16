@@ -2,7 +2,7 @@
 
 /**
  * COPYRIGHT NOTICE
- * Copyright (c) 2022 Neue Rituale GbR
+ * Copyright (c) 2023 Neue Rituale GbR
  * @author NR <code@neuerituale.com>
  * @license MIT
  */
@@ -18,20 +18,17 @@ class InputfieldPageTableNext extends InputfieldPageTable {
 
 	public static function getModuleInfo() {
 		return array(
-			'title' => __('PageTableNext'),
+			'title' => __('PageTableNext (Input)'),
 			'summary' => __('Add Inputfield for PageTableNext'),
-			'version' => 202,
-			'requires' => ['FieldtypePageTableNext', 'PageTableNext', 'ProcessWire>=3.0.179', 'PHP>=7.4.0'],
+			'version' => 203,
+			'requires' => ['InputfieldPageTable', 'PageTableNext'],
 			'permanent' => false,
 		);
 	}
 
 	public function init() {
 		parent::init();
-
 		$this->set('nameFormat', '{template.label|template.name}');
-
-		$this->modules->get('JqueryUI')->use('vex');
 	}
 
 	/**
@@ -40,6 +37,8 @@ class InputfieldPageTableNext extends InputfieldPageTable {
 	 * @throws \Exception
 	 */
 	public function ___render() : string {
+
+		$this->modules->get('JqueryUI')->use('vex');
 
 		$ptnTemplate = new TemplateFile($this->getTemplateFilePath('ptn'));
 		try {
