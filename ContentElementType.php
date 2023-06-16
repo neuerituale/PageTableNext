@@ -61,7 +61,7 @@ class ContentElementType
 							// render and reduce whitespace
 							$out = $value->renderValue($value, $path.$templateFile);
 							if(is_object($out) && method_exists($out, '__toString')) $out = (string) $out;
-							else $out = json_encode($out, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+							elseif(!is_string($out)) $out = json_encode($out, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
 							return wire()->sanitizer->reduceWhitespace($out);
 						}
