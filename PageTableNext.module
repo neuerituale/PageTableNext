@@ -352,7 +352,7 @@ class PageTableNext extends WireData implements Module {
 		// determine whether to use include=all
 		if($selector === true) {
 			$selector = "include=all";
-		} else if(strlen($selector) && !$includeAll && strpos($selector, "include=all") !== false) {
+		} else if(strlen((string) $selector) && !$includeAll && strpos((string) $selector, "include=all") !== false) {
 			foreach(new Selectors($selector) as $s) {
 				if($s->field() === 'include' && $s->value() === 'all') {
 					$includeAll = true;
