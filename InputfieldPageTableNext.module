@@ -82,7 +82,16 @@ class InputfieldPageTableNext extends InputfieldPageTable {
 			: []
 		;
 
+		/** @var Template $template */
 		foreach($this->rowTemplates as $template) {
+
+			// skip templates without direct create permissions
+			// We don't check the inherited permissions
+			if(
+				!$template->allowNewPages() ||
+				($template->useRoles && !$this->user->hasPermission('page-create', $template))
+			) continue;
+
 			/** @var Template $template */
 			$button = $this->wire('modules')->get('InputfieldButton');
 			$button->icon = $template->icon ?: 'plus-circle';
@@ -95,7 +104,6 @@ class InputfieldPageTableNext extends InputfieldPageTable {
 			$intersections = array_values( array_intersect($respectedTags, $templateTags) );
 			$buttonsSets[count($intersections) ? $intersections[0] : $this->_('Other')][] = "<span style='display:block' class='InputfieldPageTableAdd' data-url='$url'>" . $button->render() . "</span>";
 		}
-
 
 		$out .= "<hr class='uk-margin-medium-top'><div class='InputfieldPageTableButtons uk-divider uk-margin-top uk-margin-remove-bottom uk-flex uk-flex-wrap uk-child-width-expand@m' style='gap: 20px'>";
 

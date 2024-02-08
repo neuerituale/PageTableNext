@@ -67,7 +67,9 @@
 	display: none;
 }
 
-.ptn_actions {}
+.ptn_actions {
+	min-height: 36px;
+}
 .ptn_actions a,
 .ptn_actions a:focus,
 .InputfieldPageTableNext .InputfieldPageTableButtonsColumn .ui-button
