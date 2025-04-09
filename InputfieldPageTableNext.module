@@ -2,7 +2,7 @@
 
 /**
  * COPYRIGHT NOTICE
- * Copyright (c) 2023 Neue Rituale GbR
+ * Copyright (c) 2025 Neue Rituale GbR
  * @author NR <code@neuerituale.com>
  * @license MIT
  */
@@ -20,7 +20,7 @@ class InputfieldPageTableNext extends InputfieldPageTable {
 		return array(
 			'title' => __('PageTableNext (Input)'),
 			'summary' => __('Add Inputfield for PageTableNext'),
-			'version' => 203,
+			'version' => 204,
 			'requires' => ['InputfieldPageTable', 'PageTableNext'],
 			'permanent' => false,
 		);

@@ -2,7 +2,7 @@
 
 /**
  * COPYRIGHT NOTICE
- * Copyright (c) 2023 Neue Rituale GbR
+ * Copyright (c) 2025 Neue Rituale GbR
  * @author NR <code@neuerituale.com>
  * @license MIT
  */
@@ -27,7 +27,7 @@ class PageTableNext extends WireData implements Module {
 		return [
 			'title' => __('PageTable Next (Controller)'),
 			'summary' => __('PageTable with scoped admin preview'),
-			'version' => 203,
+			'version' => 204,
 			'requires' => ['ProcessWire>=3.0.179', 'PHP>=7.4.0'],
 			'installs' => ['InputfieldPageTableNext', 'FieldtypePageTableNext', 'FieldtypePageTable', 'ProcessPageClone'],
 			'autoload' => true,

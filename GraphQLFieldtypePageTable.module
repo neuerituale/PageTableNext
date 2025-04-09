@@ -2,7 +2,7 @@
 
 /**
  * COPYRIGHT NOTICE
- * Copyright (c) 2023 Neue Rituale GbR
+ * Copyright (c) 2025 Neue Rituale GbR
  * @author NR <code@neuerituale.com>
  * @license MIT
  */
@@ -18,7 +18,7 @@ class GraphQLFieldtypePageTable extends WireData implements Module
 	public static function getModuleInfo() {
 		return array(
 			'title' => 'GraphQLFieldtypePageTable',
-			'version' => 203,
+			'version' => 204,
 			'summary' => 'GraphQL support for FieldtypePageTable.',
 			'icon' => 'globe',
 			'requires' => ['ProcessGraphQL'],

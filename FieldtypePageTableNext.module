@@ -2,7 +2,7 @@
 
 /**
  * COPYRIGHT NOTICE
- * Copyright (c) 2023 Neue Rituale GbR
+ * Copyright (c) 2025 Neue Rituale GbR
  * @author NR <code@neuerituale.com>
  * @license MIT
  */
@@ -15,7 +15,7 @@ class FieldtypePageTableNext extends FieldtypePageTable {
 		return array(
 			'title' => __('PageTable Next (Field)'),
 			'summary' => __('PageTable with encapsulated admin preview'),
-			'version' => 203,
+			'version' => 204,
 			'requires' => ['FieldtypePageTable', 'PageTableNext'],
 			'autoload' => false,
 		);
