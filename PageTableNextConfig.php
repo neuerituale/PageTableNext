@@ -87,7 +87,8 @@ class PageTableNextConfig extends ModuleConfig
 
 			/** @var PageTableNext $ptn */
 			$ptn = $modules->get('PageTableNext');
-			$abandonedPages = $ptn->findAbandonedPageIds();
+			try { $abandonedPages = $ptn->findAbandonedPageIds(); }
+			catch(\Exception $e) { return "<p uk-alert class='uk-alert-danger uk-margin-small-top'>".$e->getMessage()."</p>"; }
 
 			if(!count($abandonedPages)) {
 				$label = $this->_('No abandoned pages found');
