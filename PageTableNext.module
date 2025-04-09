@@ -11,8 +11,10 @@ namespace ProcessWire;
 
 /**
  * @method string getContentElementTitle(Page $page, $formatted = false)
+ * @method string getContentElementTitlePostfix(Page $page, $formatted = false)
  * @method WireArray findPageTableNextFields()
  * @method WireArray findAdditionalReferenceFields()
+ * @method array findAbandonedPageIds()
  * @method false|int|string getDbColumn(Field $field, Page $page)
  * @method void setupFieldAndTemplate(string $newFieldName = 'ptn')
  */
@@ -34,6 +36,7 @@ class PageTableNext extends WireData implements Module {
 	}
 
 	public function init() {
+
 		// Add page reference to other fields like PageTable(Next) or Profields: Table
 		$this->addHookAfter('Page::references', $this, 'hookReferences');
 		$this->addHookAfter('Page::numReferences', $this, 'hookReferences');
@@ -49,6 +52,12 @@ class PageTableNext extends WireData implements Module {
 
 		// Persist sorting on update
 		$this->addHookBefore('InputfieldPageTableAjax::checkAjax', $this, 'hookInputfieldPageTableAjaxCheckAjax', ['priority' => 200]);
+
+		// Make PageTableNext field indexable for SearchEngine
+		if($this->modules->isInstalled('SearchEngine')) {
+			$this->addHookAfter('Indexer::isRepeatableField', $this, 'hookSearchEngineIsRepeatable');
+		}
+
 	}
 
 	public function ready() {
@@ -96,6 +105,37 @@ class PageTableNext extends WireData implements Module {
 	}
 
 	/**
+	 * Find abandoned page ids
+	 * Check all pages in the ptn store to see whether they are still linked to a ptn field.
+	 *
+	 * @return array
+	 * @throws WireDatabaseQueryException
+	 * @throws WireException
+	 */
+	public function ___findAbandonedPageIds() {
+
+		$fields = $this->findPageTableNextFields();
+		if(!$fields->count) throw new \Exception('PageTable next fields not found');
+
+		$query = new DatabaseQuerySelect();
+		$query->select('id');
+		$query->from('pages');
+
+		/** @var Field $field */
+		foreach($fields as $field) {
+
+			if(!$field->parent_id) continue; // skip fields without valid parent_id
+
+			$table = $field->getTable();
+			$query->leftjoin("$table on {$table}.data = pages.id");
+			$query->where("pages.parent_id=?", $field->parent_id);
+			$query->where("{$table}.data is null");
+		}
+
+		return $query->execute()->fetchAll(\PDO::FETCH_COLUMN);
+	}
+
+	/**
 	 * Build ContentElementTitle for overview, window and browser title
 	 * @param Page $page
 	 * @param bool $formatted
@@ -112,6 +152,16 @@ class PageTableNext extends WireData implements Module {
 		;
 
 		return $formatted ? $out : strip_tags($out);
+	}
+
+	/**
+	 * Add some title postfixes
+	 * @param Page $page
+	 * @param bool $formatted
+	 * @return string
+	 */
+	public function ___getContentElementTitlePostfix(Page $page, bool $formatted = false): string {
+		return '';
 	}
 
 	/**
@@ -314,6 +364,16 @@ class PageTableNext extends WireData implements Module {
 		} else {
 			$event->return = $additionalReferences;
 		}
+	}
+
+	/**
+	 * Make PageTableNext field indexable for SearchEngine
+	 * @param HookEvent $event
+	 * @return void
+	 */
+	public function hookSearchEngineIsRepeatable(HookEvent $event) {
+		$field = $event->argumentsByName('field');
+		if(!$event->return && $field->type instanceof FieldtypePageTableNext) $event->return = true;
 	}
 
 	/**

@@ -36,6 +36,8 @@ $pageTableNext = $modules->get('PageTableNext');
 			<!-- add your own code here ... -->
 		</div>
 
+		<?= $pageTableNext->getContentElementTitlePostfix($value, true); ?>
+
 		<div class="ptn_actions uk-margin-auto-left">
 
 			<!-- Publish -->
