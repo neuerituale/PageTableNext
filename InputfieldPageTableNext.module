@@ -2,7 +2,7 @@
 
 /**
  * COPYRIGHT NOTICE
- * Copyright (c) 2023 Neue Rituale GbR
+ * Copyright (c) 2025 Neue Rituale GbR
  * @author NR <code@neuerituale.com>
  * @license MIT
  */
@@ -20,7 +20,7 @@ class InputfieldPageTableNext extends InputfieldPageTable {
 		return array(
 			'title' => __('PageTableNext (Input)'),
 			'summary' => __('Add Inputfield for PageTableNext'),
-			'version' => 203,
+			'version' => 204,
 			'requires' => ['InputfieldPageTable', 'PageTableNext'],
 			'permanent' => false,
 		);
@@ -82,7 +82,16 @@ class InputfieldPageTableNext extends InputfieldPageTable {
 			: []
 		;
 
+		/** @var Template $template */
 		foreach($this->rowTemplates as $template) {
+
+			// skip templates without direct create permissions
+			// We don't check the inherited permissions
+			if(
+				!$template->allowNewPages() ||
+				($template->useRoles && !$this->user->hasPermission('page-create', $template))
+			) continue;
+
 			/** @var Template $template */
 			$button = $this->wire('modules')->get('InputfieldButton');
 			$button->icon = $template->icon ?: 'plus-circle';
@@ -95,7 +104,6 @@ class InputfieldPageTableNext extends InputfieldPageTable {
 			$intersections = array_values( array_intersect($respectedTags, $templateTags) );
 			$buttonsSets[count($intersections) ? $intersections[0] : $this->_('Other')][] = "<span style='display:block' class='InputfieldPageTableAdd' data-url='$url'>" . $button->render() . "</span>";
 		}
-
 
 		$out .= "<hr class='uk-margin-medium-top'><div class='InputfieldPageTableButtons uk-divider uk-margin-top uk-margin-remove-bottom uk-flex uk-flex-wrap uk-child-width-expand@m' style='gap: 20px'>";
 
@@ -210,6 +218,7 @@ class InputfieldPageTableNext extends InputfieldPageTable {
 		$file = $this->buildFileNameForRenderValue($value, true);
 
 		if(file_exists($this->config->paths->fieldTemplates . $file)) {
+			$value->of(true);
 			return $context->renderValue($value, $file);
 		} else {
 			return '<small><i>'.sprintf($this->_('Template not found: "%s"'), $this->config->urls->fieldTemplates . $file).'</i></small>';

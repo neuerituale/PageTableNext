@@ -2,7 +2,7 @@
 
 /**
  * COPYRIGHT NOTICE
- * Copyright (c) 2023 Neue Rituale GbR
+ * Copyright (c) 2025 Neue Rituale GbR
  * @author NR <code@neuerituale.com>
  * @license MIT
  */
@@ -35,6 +35,8 @@ $pageTableNext = $modules->get('PageTableNext');
 			<?= $pageTableNext->getContentElementTitle($value, true); ?>
 			<!-- add your own code here ... -->
 		</div>
+
+		<?= $pageTableNext->getContentElementTitlePostfix($value, true); ?>
 
 		<div class="ptn_actions uk-margin-auto-left">
 

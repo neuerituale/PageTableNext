@@ -11,4 +11,9 @@ namespace ProcessWire;
  */
 
 if(!($value instanceof PageArray)) return;
-foreach($value as $contentElement) echo $page->renderValue($contentElement, ($field->pathToTemplates ?? '') . $contentElement->template->name);
+
+// prepare path to template files
+$path = $field->pathToTemplates ? (trim($field->pathToTemplates, '/') . '/') : '';
+
+// render content elements
+foreach($value as $contentElement) echo $page->renderValue($contentElement, $path.$contentElement->template->name);

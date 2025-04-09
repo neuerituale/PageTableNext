@@ -2,7 +2,7 @@
 
 /**
  * COPYRIGHT NOTICE
- * Copyright (c) 2023 Neue Rituale GbR
+ * Copyright (c) 2025 Neue Rituale GbR
  * @author NR <code@neuerituale.com>
  * @license MIT
  */
@@ -11,8 +11,11 @@ namespace ProcessWire;
 
 /**
  * @method string getContentElementTitle(Page $page, $formatted = false)
+ * @method string getContentElementTitlePostfix(Page $page, $formatted = false)
  * @method WireArray findPageTableNextFields()
  * @method WireArray findAdditionalReferenceFields()
+ * @method array findAbandonedPageIds()
+ * @method PageArray findAbandonedPages(array $options = [])
  * @method false|int|string getDbColumn(Field $field, Page $page)
  * @method void setupFieldAndTemplate(string $newFieldName = 'ptn')
  */
@@ -25,7 +28,7 @@ class PageTableNext extends WireData implements Module {
 		return [
 			'title' => __('PageTable Next (Controller)'),
 			'summary' => __('PageTable with scoped admin preview'),
-			'version' => 203,
+			'version' => 204,
 			'requires' => ['ProcessWire>=3.0.179', 'PHP>=7.4.0'],
 			'installs' => ['InputfieldPageTableNext', 'FieldtypePageTableNext', 'FieldtypePageTable', 'ProcessPageClone'],
 			'autoload' => true,
@@ -34,6 +37,7 @@ class PageTableNext extends WireData implements Module {
 	}
 
 	public function init() {
+
 		// Add page reference to other fields like PageTable(Next) or Profields: Table
 		$this->addHookAfter('Page::references', $this, 'hookReferences');
 		$this->addHookAfter('Page::numReferences', $this, 'hookReferences');
@@ -49,6 +53,12 @@ class PageTableNext extends WireData implements Module {
 
 		// Persist sorting on update
 		$this->addHookBefore('InputfieldPageTableAjax::checkAjax', $this, 'hookInputfieldPageTableAjaxCheckAjax', ['priority' => 200]);
+
+		// Make PageTableNext field indexable for SearchEngine
+		if($this->modules->isInstalled('SearchEngine')) {
+			$this->addHookAfter('Indexer::isRepeatableField', $this, 'hookSearchEngineIsRepeatable');
+		}
+
 	}
 
 	public function ready() {
@@ -96,6 +106,62 @@ class PageTableNext extends WireData implements Module {
 	}
 
 	/**
+	 * Find abandoned page ids
+	 * Check all pages in the ptn store to see whether they are still linked to a ptn field.
+	 *
+	 * @return array
+	 * @throws WireDatabaseQueryException
+	 * @throws WireException
+	 */
+	public function ___findAbandonedPageIds(): array {
+
+		$fields = $this->findPageTableNextFields();
+		if(!$fields->count) throw new \Exception('PageTable next fields not found');
+
+		$query = new DatabaseQuerySelect();
+		$query->select('id');
+		$query->from('pages');
+
+		/** @var Field $field */
+		foreach($fields as $field) {
+
+			if(!$field->parent_id) continue; // skip fields without valid parent_id
+
+			$table = $field->getTable();
+			$query->leftjoin("$table on {$table}.data = pages.id");
+			$query->where("pages.parent_id=?", $field->parent_id);
+			$query->where("{$table}.data is null");
+		}
+
+		return $query->execute()->fetchAll(\PDO::FETCH_COLUMN);
+	}
+
+	/**
+	 * Find abandoned pages
+	 *
+	 * @param array $options
+	 * @return PageArray
+	 * @throws WireException
+	 */
+	public function ___findAbandonedPages(array $options = []): PageArray {
+
+		$options = array_merge([
+			'selector' => 'limit=25, sort=-modified, include=all',
+			'additionalSelector' => '',
+			'finderOptions' => ['lazy' => true]
+		], $options);
+
+		$abandonedPageIds = $this->findAbandonedPageIds();
+		if(!count($abandonedPageIds)) return new PageArray();
+
+		$selectors = new Selectors($options['selector']);
+		if($options['additionalSelector']) $selectors->import($options['additionalSelector']);
+		$selectors->add(new SelectorEqual('id', $abandonedPageIds));
+
+		return wire()->pages->find($selectors, $options['finderOptions']);
+	}
+
+	/**
 	 * Build ContentElementTitle for overview, window and browser title
 	 * @param Page $page
 	 * @param bool $formatted
@@ -115,12 +181,40 @@ class PageTableNext extends WireData implements Module {
 	}
 
 	/**
+	 * Add some title postfixes
+	 * @param Page $page
+	 * @param bool $formatted
+	 * @return string
+	 */
+	public function ___getContentElementTitlePostfix(Page $page, bool $formatted = false): string {
+		return '';
+	}
+
+	/**
+	 * Build path to content element e.g. /de/my-page/#s5421
+	 * @param Page $page
+	 * @param Page $reference
+	 * @param Language|null $language
+	 * @return string
+	 */
+	public function ___buildContentElementPath(Page $page, Page $reference, Language $language = null): string {
+
+		// get path
+		$path = $this->modules->isInstalled('LanguageSupportPageNames') && $language instanceof Language
+			? $reference->localPath($language)
+			: $reference->path()
+		;
+
+		return $path . '#s' . $page->id;
+	}
+
+	/**
 	 * Optimize headline, browser title and breadcrumb to sections
 	 * @param HookEvent $event
 	 * @return void
 	 * @throws WireException
 	 */
-	public function hookContentElementEditForm(HookEvent $event) {
+	public function hookContentElementEditForm(HookEvent $event): void {
 
 		/** @var ProcessPageEdit $processPageEdit */
 		$processPageEdit = $event->object;
@@ -155,7 +249,7 @@ class PageTableNext extends WireData implements Module {
 	}
 
 	/**
-	 * Find embed page for all "section-" templates
+	 * Find embed page for all content element templates
 	 * and manipulate local httpurl
 	 *
 	 * @param HookEvent $event
@@ -163,7 +257,7 @@ class PageTableNext extends WireData implements Module {
 	 * @throws WireException
 	 * @throws WirePermissionException
 	 */
-	public function hookContentElementPath(HookEvent $event) {
+	public function hookContentElementPath(HookEvent $event): void {
 
 		/** @var Page $page */
 		$page = $event->object;
@@ -174,19 +268,8 @@ class PageTableNext extends WireData implements Module {
 		// no references found
 		if(!$reference || !$reference->id) return;
 
-		// has language param
-		$language = null;
-		if($languageId = $this->input->get('language', 'int')) {
-			$language = wire()->languages->get($languageId);
-		}
-
-		// set path
-		$path = $this->modules->isInstalled('LanguageSupportPageNames')
-			? $reference->localPath($language)
-			: $reference->path()
-			;
-
-		$event->return = $path . '#s' . $page->id;
+		// build path
+		$event->return = $this->buildContentElementPath($page, $reference, $event->arguments(0));
 	}
 
 	/**
@@ -310,6 +393,16 @@ class PageTableNext extends WireData implements Module {
 	}
 
 	/**
+	 * Make PageTableNext field indexable for SearchEngine
+	 * @param HookEvent $event
+	 * @return void
+	 */
+	public function hookSearchEngineIsRepeatable(HookEvent $event) {
+		$field = $event->argumentsByName('field');
+		if(!$event->return && $field->type instanceof FieldtypePageTableNext) $event->return = true;
+	}
+
+	/**
 	 * #reference
 	 * Return pages referencing the given $page, optionally indexed by field name
 	 *
@@ -345,7 +438,7 @@ class PageTableNext extends WireData implements Module {
 		// determine whether to use include=all
 		if($selector === true) {
 			$selector = "include=all";
-		} else if(strlen($selector) && !$includeAll && strpos($selector, "include=all") !== false) {
+		} else if(strlen((string) $selector) && !$includeAll && strpos((string) $selector, "include=all") !== false) {
 			foreach(new Selectors($selector) as $s) {
 				if($s->field() === 'include' && $s->value() === 'all') {
 					$includeAll = true;
