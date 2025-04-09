@@ -209,6 +209,27 @@ Register your action e.g. in the file ```ptn.php```.
 </script>
 ```
 
+## Abandoned data
+Sometimes it can happen that a page loses the link to a PageTableNext field. It can then be useful to locate this abandoned content
+
+You can use this function to find these abandoned pages.
+```php
+// find the abandoned page ids as array
+$abandonedPageIds = $modules->get('PageTableNext')->findAbandonedPageIds();
+
+// OR
+
+// find the abandoned pages as PageArray and delete
+$options = [
+    'selector' => 'limit=25, sort=-modified, include=all', // default
+    'additionalSelector' => 'modified<now-24month', // example
+    'finderOptions' => ['lazy' => true] // default
+];
+$abandonedPages = $modules->get('PageTableNext')->findAbandonedPages($options);
+foreach($abandonedPages as $p) wire()->pages->delete($p);
+
+```
+
 ## GraphQL
 The content elements can also be queried using GraphQL. 
 For this purpose, the data is divided into three new fields: 

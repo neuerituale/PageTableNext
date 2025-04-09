@@ -15,6 +15,7 @@ namespace ProcessWire;
  * @method WireArray findPageTableNextFields()
  * @method WireArray findAdditionalReferenceFields()
  * @method array findAbandonedPageIds()
+ * @method PageArray findAbandonedPages(array $options = [])
  * @method false|int|string getDbColumn(Field $field, Page $page)
  * @method void setupFieldAndTemplate(string $newFieldName = 'ptn')
  */
@@ -112,7 +113,7 @@ class PageTableNext extends WireData implements Module {
 	 * @throws WireDatabaseQueryException
 	 * @throws WireException
 	 */
-	public function ___findAbandonedPageIds() {
+	public function ___findAbandonedPageIds(): array {
 
 		$fields = $this->findPageTableNextFields();
 		if(!$fields->count) throw new \Exception('PageTable next fields not found');
@@ -133,6 +134,31 @@ class PageTableNext extends WireData implements Module {
 		}
 
 		return $query->execute()->fetchAll(\PDO::FETCH_COLUMN);
+	}
+
+	/**
+	 * Find abandoned pages
+	 *
+	 * @param array $options
+	 * @return PageArray
+	 * @throws WireException
+	 */
+	public function ___findAbandonedPages(array $options = []): PageArray {
+
+		$options = array_merge([
+			'selector' => 'limit=25, sort=-modified, include=all',
+			'additionalSelector' => '',
+			'finderOptions' => ['lazy' => true]
+		], $options);
+
+		$abandonedPageIds = $this->findAbandonedPageIds();
+		if(!count($abandonedPageIds)) return new PageArray();
+
+		$selectors = new Selectors($options['selector']);
+		if($options['additionalSelector']) $selectors->import($options['additionalSelector']);
+		$selectors->add(new SelectorEqual('id', $abandonedPageIds));
+
+		return wire()->pages->find($selectors, $options['finderOptions']);
 	}
 
 	/**

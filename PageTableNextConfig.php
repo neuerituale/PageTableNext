@@ -50,6 +50,7 @@ class PageTableNextConfig extends ModuleConfig
 
 		$inputfields = parent::getInputfields();
 
+		/** @var InputfieldFieldset $fieldset */
 		$fieldset = $this->modules->get('InputfieldFieldset');
 		$fieldset->label = $this->_('Add new field and template');
 		$fieldset->description = $this->_("The setup creates the following: a PageTableNext field, the template for the folder page, the folder page and copies the render file for the field to the appropriate folder (usually /site/templates/fields/). If you want to use a different field name than the default, enter it in the input field. You can also use the setup to create more PageTableNext fields. The existing folder page will also be linked to this field.");
@@ -101,7 +102,7 @@ class PageTableNextConfig extends ModuleConfig
 			$bookmark = array(
 				'initSelector' => 'id=' . implode('|', $abandonedPages),
 				'defaultSelector' => "include=all",
-				'columns' => array('title', 'template', 'parent', 'modified', 'modified_users_id'),
+				'columns' => array('title', 'template', 'parent', 'modified', 'modified_users_id', 'created'),
 				'toggles' => array('noButtons'),
 				'viewMode' => $windowMode,
 				'editMode' => $windowMode,
@@ -109,8 +110,10 @@ class PageTableNextConfig extends ModuleConfig
 			);
 			$id = "ptn_abandoned_pages";
 			$url = ProcessPageLister::addSessionBookmark($id, $bookmark) . '&modal=inline&minimal=1';
+			$description = $this->_('These pages are no longer linked to a PageTableNext field.');
 
 			return "
+				<div class='description'>$description</div>
 				<iframe id='PageTableNextConfigPageLister' scrolling='no' style='width:100%; border: none;' src='$url'></iframe>
 				<script>$('#PageTableNextConfigPageLister').iFrameResize({ });</script>
 			";
