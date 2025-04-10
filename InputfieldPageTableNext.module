@@ -11,6 +11,7 @@ namespace ProcessWire;
 
 /**
  * @method string renderTable(array $columns)
+ * @method string renderValueWrapper(Page $context, Page $value)
  * @method string buildFileNameForRenderValue(Page $section, bool $withExtension = false)
  */
 
@@ -27,13 +28,15 @@ class InputfieldPageTableNext extends InputfieldPageTable {
 		);
 	}
 
-	public function init() {
+	public function init(): void {
 		parent::init();
 		$this->set('nameFormat', '{template.label|template.name}');
+		$this->addHookAfter('TemplateFile::fileFailed', $this, 'hookFileFailed');
 	}
 
 	/**
 	 * Render Field
+	 *
 	 * @return string
 	 * @throws \Exception
 	 */
@@ -42,21 +45,16 @@ class InputfieldPageTableNext extends InputfieldPageTable {
 		$this->modules->get('JqueryUI')->use('vex');
 
 		$ptnTemplate = new TemplateFile($this->getTemplateFilePath('ptn'));
-		try {
-			$ptnTemplate->set('value', $this->renderField());
-			$ptnTemplate->set('page', $this->hasPage);
-			$ptnTemplate->set('ptn', $this);
-		} catch(\Exception $e) {
-			echo "<pre>";
-			var_dump($e);
-			echo "</pre>";
-		}
+		$ptnTemplate->set('value', $this->renderField());
+		$ptnTemplate->set('page', $this->hasPage);
+		$ptnTemplate->set('ptn', $this);
 
 		return $ptnTemplate->render();
 	}
 
 	/**
 	 * Render the PageTable Inputfield
+	 *
 	 * @return string
 	 * @throws WireException
 	 * @throws WirePermissionException
@@ -145,6 +143,7 @@ class InputfieldPageTableNext extends InputfieldPageTable {
 
 	/**
 	 * Render Table
+	 *
 	 * @param array $columns
 	 * @return string
 	 * @throws \Exception
@@ -152,25 +151,24 @@ class InputfieldPageTableNext extends InputfieldPageTable {
 	public function ___renderTable(array $columns) : string {
 
 		$page = $this->hasPage;
-		$sections = [];
+		$contentElements = [];
 
 		$fileName = $this->getTemplateFilePath('ptn-content');
 
-		// Add sections
-		/** @var Page $section */
-		foreach($this->attr('value') as $section) {
-
-			$section->of(true);
+		// Add contentElement
+		/** @var Page $contentElement */
+		foreach($this->attr('value') as $contentElement) {
+			$contentElement->of(true);
 			$sectionOutTemplate = new TemplateFile($fileName);
 			$sectionOutTemplate->set('page', $page);
-			$sectionOutTemplate->set('value', $section);
+			$sectionOutTemplate->set('value', $contentElement);
 			$sectionOutTemplate->set('ptn', $this);
-			$sections[] = $sectionOutTemplate;
+			$contentElements[] = $sectionOutTemplate;
 		}
 
 		$ptnTable = new TemplateFile($this->getTemplateFilePath('ptn-table'));
 		$ptnTable->set('page', $page);
-		$ptnTable->set('value', $sections);
+		$ptnTable->set('value', $contentElements);
 		$ptnTable->set('ptn', $this);
 
 		return $ptnTable->render();
@@ -178,11 +176,12 @@ class InputfieldPageTableNext extends InputfieldPageTable {
 
 	/**
 	 * Get template file location
+	 *
 	 * @param $name
-	 * @return false|string
+	 * @return string
 	 * @throws \Exception
 	 */
-	public function getTemplateFilePath($name) {
+	public function getTemplateFilePath($name): string {
 		if(empty($name)) throw new \Exception('Empty template file name');
 		return $this->getFileLocation(
 			$name . '.' . $this->config->templateExtension,
@@ -192,6 +191,7 @@ class InputfieldPageTableNext extends InputfieldPageTable {
 
 	/**
 	 * Get file location
+	 *
 	 * @param $fileName
 	 * @param string $from
 	 * @return string
@@ -210,17 +210,16 @@ class InputfieldPageTableNext extends InputfieldPageTable {
 
 	/**
 	 * Simple wrapper for Page::renderValue
+	 *
 	 * @param Page $context
 	 * @param Page $value
-	 * @return mixed|string
+	 * @return string
 	 */
-	public function ___renderValueWrapper(Page $context, Page $value) {
-
+	public function ___renderValueWrapper(Page $context, Page $value): string {
 		$file = $this->buildFileNameForRenderValue($value, true);
-
 		if(file_exists($this->config->paths->fieldTemplates . $file)) {
 			$value->of(true);
-			return $context->renderValue($value, $file);
+			return $context->renderField($this->hasField ?? '', $file, $value);
 		} else {
 			return '<small><i>'.sprintf($this->_('Template not found: "%s"'), $this->config->urls->fieldTemplates . $file).'</i></small>';
 		}
@@ -229,11 +228,12 @@ class InputfieldPageTableNext extends InputfieldPageTable {
 
 	/**
 	 * Build filename with field configured path segment.
+	 *
 	 * @param Page $section
 	 * @param bool $withExtension
 	 * @return string
 	 */
-	public function ___buildFileNameForRenderValue(Page $section, bool $withExtension = false) {
+	public function ___buildFileNameForRenderValue(Page $section, bool $withExtension = false): string {
 
 		$path = trim($this->sanitizer->path($this->hasField->pathToTemplates), '/');
 		$filename = $section->template->name;
@@ -243,10 +243,49 @@ class InputfieldPageTableNext extends InputfieldPageTable {
 	}
 
 	/**
+	 * Build a exception message
+	 * Inspired by Wire::___trackException()
+	 *
+	 * @param \Exception $e
+	 * @return string
+	 */
+	public function buildExceptionMessage(\Exception $e): string {
+		return $e->getMessage()
+			. " (in "
+			. str_replace(wire()->config->paths->root, '/', $e->getFile())
+			. " line "
+			. $e->getLine()
+			. ")";
+	}
+
+	/**
+	 * Prevents the entire rendering from being cancelled in the event of errors in ptn templates
+	 *
+	 * @param HookEvent $event
+	 * @return void
+	 */
+	public function hookFileFailed(HookEvent $event): void {
+
+		/** @var TemplateFile $templateFile */
+		$templateFile = $event->object;
+
+		/** @var \Exception $e */
+		$e = $event->arguments(1);
+
+		if($templateFile->field instanceof PageTableField) {
+			$templateFile->error($this->buildExceptionMessage($e), Notice::login);
+			$templateFile->fileFinished();
+			$event->return = false;
+		}
+
+	}
+
+	/**
 	 * Get the inputfield config fields
+	 *
 	 * @return InputfieldWrapper
 	 */
-	public function ___getConfigInputfields() {
+	public function ___getConfigInputfields(): InputfieldWrapper {
 
 		$inputfields = parent::___getConfigInputfields();
 
