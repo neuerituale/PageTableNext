@@ -18,7 +18,7 @@ class GraphQLFieldtypePageTable extends WireData implements Module
 	public static function getModuleInfo() {
 		return array(
 			'title' => 'GraphQLFieldtypePageTable',
-			'version' => 204,
+			'version' => 205,
 			'summary' => 'GraphQL support for FieldtypePageTable.',
 			'icon' => 'globe',
 			'requires' => ['ProcessGraphQL'],

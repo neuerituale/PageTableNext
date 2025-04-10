@@ -15,7 +15,7 @@ class GraphQLFieldtypePageTableNext extends GraphQLFieldtypePageTable implements
 
 		return array(
 			'title' => 'GraphQLFieldtypePageTableNext',
-			'version' => 204,
+			'version' => 205,
 			'summary' => 'GraphQL support for FieldtypePageTableNext.',
 			'icon' => 'globe',
 			'requires' => ['GraphQLFieldtypePageTable'],

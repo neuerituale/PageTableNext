@@ -15,7 +15,7 @@ class FieldtypePageTableNext extends FieldtypePageTable {
 		return array(
 			'title' => __('PageTable Next (Field)'),
 			'summary' => __('PageTable with encapsulated admin preview'),
-			'version' => 204,
+			'version' => 205,
 			'requires' => ['PageTableNext'],
 			'installs' => ['PageTableNext'],
 			'autoload' => false,
