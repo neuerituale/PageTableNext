@@ -46,13 +46,15 @@
 }
 
 .ptn_label {
-
+	display: flex;
+	align-items: center;
+	column-gap: 5px;
 }
 
 [data-iscopy] .ptn_label { color: silver; }
 
 .ptn_label_icon {
-	margin-left: -6px;
+	margin-left: -3px;
 }
 
 [data-iscopy] .ptn_label_icon { visibility: hidden }
