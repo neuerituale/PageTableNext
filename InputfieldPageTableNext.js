@@ -5,7 +5,7 @@ class PtnContent extends HTMLElement {
 		const shadow = this.attachShadow({ mode: 'open' });
 		setTimeout(() => {
 			const template = this.querySelector('#content');
-			shadow.append(template.content);
+			template && shadow.append(template.content);
 		})
 	}
 }
