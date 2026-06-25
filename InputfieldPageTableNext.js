@@ -331,6 +331,14 @@ customElements.define('ptn-content', PtnContent);
 		 */
 		self.handleAction = function(e, action, params = undefined){
 
+			// allow cmd/ctrl+click to open a real link natively (e.g. in a new tab)
+			const $target = $(e.currentTarget).closest('a[href]');
+			const href = $target.attr('href');
+			if((e.metaKey || e.ctrlKey) && href && href !== '#') {
+				e.stopPropagation();
+				return; // let the browser handle the link
+			}
+
 			e.preventDefault();
 			e.stopPropagation();
 

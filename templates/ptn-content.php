@@ -79,7 +79,7 @@ $pageTableNext = $modules->get('PageTableNext');
 			<?php if($value->editable) : ?>
 				<a
 					class="uk-icon-button uk-icon ptn_actions_edit"
-					href="#"
+					href="<?= $value->editUrl(); ?>"
 					uk-icon="icon: pencil; ratio: .8"
 					title="<?= __('Edit'); ?>"
 				></a>
